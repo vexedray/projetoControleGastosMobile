@@ -26,11 +26,11 @@ Desenvolver uma solução completa que auxilie pessoas a terem maior controle so
 - ✅ **Categorização**: Organização de gastos por categorias personalizáveis
 - ✅ **Filtros**: Busca por data, categoria e valor
 - ✅ **Exclusão de Despesas**: Remover registros indesejados
-
+- ✅ Gráficos de gastos por categoria
+  
 ### 🔮 Funcionalidades Futuras (Opcionais)
 
 - 🔄 Editar despesas existentes
-- 📊 Gráficos de gastos por categoria
 - 📈 Relatórios mensais detalhados
 - 🎯 Definir metas de gastos
 - 🔔 Notificações e alertas
@@ -53,7 +53,6 @@ Desenvolver uma solução completa que auxilie pessoas a terem maior controle so
 - **React Native 0.72.6**
 - **Expo 49.0.15**
 - **TypeScript**
-- **Victory Native** (gráficos)
 - **Axios** (HTTP client)
 
 ## 📋 Pré-requisitos
@@ -65,7 +64,7 @@ Desenvolver uma solução completa que auxilie pessoas a terem maior controle so
 
 ### Frontend
 - Node.js 16+
-- npm ou yarn
+- npm
 - Expo CLI
 
 
@@ -89,9 +88,11 @@ mvn spring-boot:run
 
 2. **Configuração do banco de dados**
 
+```
 -Instale o MySQL Server
 -Crie um usuário root sem senha ou configure no application.properties
 -O banco sistema_gastos será criado automaticamente
+```
 
 3. **Configure o arquivo `application.properties`**
 ```properties
