@@ -1,6 +1,44 @@
-# Sistema de Controle de Gastos
+# 💰 Sistema de Controle de Gastos
 
-Sistema completo de controle de gastos pessoais com backend em Spring Boot e frontend em React Native.
+---
+
+Sistema completo de controle de gastos pessoais com backend em **Spring Boot** e frontend em **React Native**.
+
+---
+
+## 📋 Sobre o Projeto
+
+Aplicativo mobile desenvolvido para controle financeiro pessoal, permitindo aos usuários registrar, categorizar e visualizar seus gastos de forma simples e intuitiva.
+
+### 🎯 Objetivo Principal
+
+Desenvolver uma solução completa que auxilie pessoas a terem maior controle sobre suas finanças pessoais, acompanhar seus gastos mensais e tomar decisões financeiras mais conscientes.
+
+---
+
+## ✨ Funcionalidades
+
+### 📌 Funcionalidades Principais
+
+- ✅ **Cadastro de Despesas**: Adicionar gastos com descrição, valor, categoria e data
+- ✅ **Listagem de Gastos**: Visualizar histórico completo de despesas registradas
+- ✅ **Gerenciamento de Usuários**: Sistema de cadastro e autenticação JWT
+- ✅ **Categorização**: Organização de gastos por categorias personalizáveis
+- ✅ **Filtros**: Busca por data, categoria e valor
+- ✅ **Exclusão de Despesas**: Remover registros indesejados
+
+### 🔮 Funcionalidades Futuras (Opcionais)
+
+- 🔄 Editar despesas existentes
+- 📊 Gráficos de gastos por categoria
+- 📈 Relatórios mensais detalhados
+- 🎯 Definir metas de gastos
+- 🔔 Notificações e alertas
+- 📄 Exportar dados para PDF/Excel
+- 🎨 Categorias personalizadas
+- 🌙 Modo escuro
+
+---
 
 ## 🚀 Tecnologias Utilizadas
 
@@ -30,11 +68,11 @@ Sistema completo de controle de gastos pessoais com backend em Spring Boot e fro
 - npm ou yarn
 - Expo CLI
 
-## 🛠️ Instalação e Configuração
 
-### 1. Backend (Spring Boot)
 
-```bash
+### 🔧 Configuração do Backend
+
+```
 # Navegar para o diretório do backend
 cd backend
 
@@ -49,62 +87,238 @@ mvn clean install
 mvn spring-boot:run
 ```
 
-**Configuração do Banco de Dados:**
-1. Instale o MySQL Server
-2. Crie um usuário root sem senha ou configure no `application.properties`
-3. O banco `sistema_gastos` será criado automaticamente
+2. **Configuração do banco de dados**
 
-### 2. Frontend (React Native)
+-Instale o MySQL Server
+-Crie um usuário root sem senha ou configure no application.properties
+-O banco sistema_gastos será criado automaticamente
 
+3. **Configure o arquivo `application.properties`**
+```properties
+# Database Configuration
+spring.datasource.url=jdbc:mysql://localhost:3306/controle_gastos
+spring.datasource.username=seu_usuario
+spring.datasource.password=sua_senha
+
+# JPA Configuration
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+
+# JWT Configuration
+jwt.secret=sua_chave_secreta_aqui
+jwt.expiration=86400000
+```
+
+O backend estará rodando em `http://localhost:8080`
+
+### 📱 Configuração do Frontend
+
+1. **Navegue até a pasta frontend**
 ```bash
-# Navegar para o diretório do frontend
-cd frontend
+cd ../frontend
+```
 
-# Instalar dependências
+2. **Instale as dependências**
+```bash
+
+npm axios 
 npm install --legacy-peer-deps
+   
+3. **Configure a URL da API**
 
-# Executar o projeto
-npm start
+Edite o arquivo `src/services/api.ts`:
+```typescript
+const api = axios.create({
+  baseURL: 'http://localhost:8080/api', // ou seu IP local
+});
 ```
 
-## 📱 Funcionalidades
-
-### Backend - API REST
-
-#### Endpoints disponíveis:
-
-- **POST /gastos** - Criar novo gasto
-- **GET /gastos** - Listar todos os gastos
-- **GET /gastos/por-tipo** - Retornar gastos agrupados por tipo (para gráfico)
-- **DELETE /gastos/{id}** - Deletar um gasto
-
-#### Modelo de dados:
-```json
-{
-  "id": 1,
-  "valor": 25.50,
-  "tipo": "alimentacao",
-  "data": "2024-10-01T12:30:00"
-}
+4. **Execute o projeto**
+```bash
+npx expo start
 ```
 
-### Frontend - App Mobile
+5. **Abra no seu dispositivo**
+- Escaneie o QR Code com o app **Expo Go** (Android/iOS)
+- Ou pressione `a` para Android, `i` para iOS
 
-#### Funcionalidades:
-- ✅ Formulário para adicionar gastos (valor, tipo, data)
-- ✅ Lista de gastos com opção de excluir
-- ✅ Gráfico de pizza mostrando distribuição por tipo
-- ✅ Interface responsiva e intuitiva
+---
 
-#### Tipos de gastos suportados:
-- Alimentação
-- Transporte
-- Lazer
-- Saúde
-- Educação
-- Outros
+## 🗂️ Estrutura do Projeto
 
+### Backend (Spring Boot)
 
-## 📄 Licença
+```
+backend/
+├── src/
+│   └── main/
+│       ├── java/
+│       │   └── com/expense/
+│       │       ├── controller/      # Controllers REST
+│       │       │   ├── ExpenseController.java
+│       │       │   └── UserController.java
+│       │       ├── model/           # Entidades JPA
+│       │       │   ├── Expense.java
+│       │       │   └── User.java
+│       │       ├── repository/      # Repositórios JPA
+│       │       │   ├── ExpenseRepository.java
+│       │       │   └── UserRepository.java
+│       │       ├── service/         # Regras de negócio
+│       │       │   ├── ExpenseService.java
+│       │       │   └── UserService.java
+│       │       └── ExpenseApplication.java
+│       └── resources/
+│           ├── application.properties
+│           └── data.sql
+├── pom.xml
+└── README.md
+```
 
-Este projeto está sob a licença MIT.
+### Frontend (React Native)
+
+```
+frontend/
+├── src/
+│   ├── components/          # Componentes reutilizáveis
+│   │   ├── ExpenseForm.tsx
+│   │   └── ExpenseList.tsx
+│   ├── screens/             # Telas do app
+│   │   ├── AddExpenseScreen.tsx
+│   │   ├── HomeScreen.tsx
+│   │   └── LoginScreen.tsx
+│   ├── services/            # Serviços e API
+│   │   └── api.ts
+│   └── App.tsx
+├── package.json
+└── README.md
+```
+
+---
+
+## 🔌 Endpoints da API
+
+### 🔐 Autenticação
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `POST` | `/api/auth/register` | Registrar novo usuário |
+| `POST` | `/api/auth/login` | Login de usuário |
+
+### 💸 Despesas
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/api/expenses` | Listar todas as despesas |
+| `GET` | `/api/expenses/{id}` | Buscar despesa por ID |
+| `POST` | `/api/expenses` | Criar nova despesa |
+| `PUT` | `/api/expenses/{id}` | Atualizar despesa |
+| `DELETE` | `/api/expenses/{id}` | Deletar despesa |
+| `GET` | `/api/expenses/filter?date={date}` | Filtrar por data |
+
+### 👤 Usuários
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/api/users/me` | Buscar usuário logado |
+| `PUT` | `/api/users/{id}` | Atualizar usuário |
+
+---
+
+## 📊 Modelo de Dados
+
+### 📐 Diagrama de Classes (UML)
+
+```
+┌─────────────────────┐         1        N  ┌──────────────────────┐
+│       User          │◄────────────────────┤      Expense         │
+├─────────────────────┤                      ├──────────────────────┤
+│ - id: Long          │                      │ - id: Long           │
+│ - username: String  │                      │ - description: String│
+│ - email: String     │                      │ - amount: Double     │
+│ - password: String  │                      │ - category: String   │
+│ - role: String      │                      │ - date: LocalDate    │
+└─────────────────────┘                      │ - user: User         │
+                                             └──────────────────────┘
+```
+
+### 🗄️ Modelo Entidade-Relacionamento (ER)
+
+```sql
+users (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  username VARCHAR(50) NOT NULL UNIQUE,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  role VARCHAR(20) DEFAULT 'USER',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+
+expenses (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  description VARCHAR(200) NOT NULL,
+  amount DECIMAL(10, 2) NOT NULL,
+  category VARCHAR(50) NOT NULL,
+  date DATE NOT NULL,
+  user_id BIGINT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+)
+```
+
+---
+
+## 📖 Documentação
+
+### 📚 Swagger/OpenAPI
+
+Acesse a documentação interativa da API em:
+```
+http://localhost:8080/swagger-ui.html
+```
+
+---
+
+## 🧪 Testes
+
+### Backend
+
+Execute os testes unitários:
+```bash
+mvn test
+```
+
+Cobertura de testes:
+```bash
+mvn clean test jacoco:report
+```
+
+O relatório estará disponível em: `target/site/jacoco/index.html`
+
+---
+
+## 🎯 Público-Alvo
+
+- 💼 Pessoas que desejam ter maior controle sobre suas finanças pessoais
+- 📊 Usuários que buscam acompanhar seus gastos mensais
+- 💡 Indivíduos interessados em tomar decisões financeiras mais conscientes
+
+---
+
+## 🤝 Contribuindo
+
+Contribuições são sempre bem-vindas! Siga os passos:
+
+1. Faça um Fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/MinhaFeature`)
+3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
+4. Push para a branch (`git push origin feature/MinhaFeature`)
+5. Abra um Pull Request
+
+---
+
+## 📝 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+---
