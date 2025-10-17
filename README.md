@@ -104,34 +104,6 @@ npm start
 - Educação
 - Outros
 
-## 🚧 Status das Correções Realizadas
-
-### ✅ Problemas Corrigidos:
-
-1. **Imports javax.persistence → jakarta.persistence**
-   - ✅ Corrigido em `Expense.java`
-   - ✅ Corrigido em `User.java`
-
-2. **Nomes de campos em português**
-   - ✅ `value` → `valor`
-   - ✅ `type` → `tipo`
-   - ✅ `date` → `data`
-   - ✅ Tabela `expenses` → `gastos`
-
-3. **Métodos faltando**
-   - ✅ `findByTipo()` no repository
-   - ✅ `getExpensesByTypeGrouped()` no service
-   - ✅ Endpoint `/por-tipo` atualizado
-
-4. **Configurações**
-   - ✅ CORS habilitado
-   - ✅ MySQL configurado
-   - ✅ Dados de exemplo adicionados
-
-5. **Frontend**
-   - ✅ Dependências instaladas
-   - ✅ Package.json atualizado
-   - ✅ Compatibilidade de versões resolvida
 
 ## 📄 Licença
 
