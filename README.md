@@ -24,18 +24,17 @@ Desenvolver uma solução completa que auxilie pessoas a terem maior controle so
 - ✅ **Listagem de Gastos**: Visualizar histórico completo de despesas registradas
 - ✅ **Gerenciamento de Usuários**: Sistema de cadastro e autenticação JWT
 - ✅ **Categorização**: Organização de gastos por categorias personalizáveis
-- ✅ **Filtros**: Busca por data, categoria e valor
 - ✅ **Exclusão de Despesas**: Remover registros indesejados
 - ✅ Gráficos de gastos por categoria
   
 ### 🔮 Funcionalidades Futuras (Opcionais)
 
 - 🔄 Editar despesas existentes
-- 📈 Relatórios mensais detalhados
 - 🎯 Definir metas de gastos
 - 🔔 Notificações e alertas
 - 📄 Exportar dados para PDF/Excel
 - 🎨 Categorias personalizadas
+- 📄 Filtros**: Busca por data, categoria e valor
 - 🌙 Modo escuro
 
 ---
@@ -223,23 +222,6 @@ Acesse a documentação interativa da API em:
 http://localhost:8080/swagger-ui.html
 ```
 
----
-
-## 🧪 Testes
-
-### Backend
-
-Execute os testes unitários:
-```bash
-mvn test
-```
-
-Cobertura de testes:
-```bash
-mvn clean test jacoco:report
-```
-
-O relatório estará disponível em: `target/site/jacoco/index.html`
 
 ---
 
@@ -251,20 +233,3 @@ O relatório estará disponível em: `target/site/jacoco/index.html`
 
 ---
 
-## 🤝 Contribuindo
-
-Contribuições são sempre bem-vindas! Siga os passos:
-
-1. Faça um Fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/MinhaFeature`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
-4. Push para a branch (`git push origin feature/MinhaFeature`)
-5. Abra um Pull Request
-
----
-
-## 📝 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
----
