@@ -197,40 +197,13 @@ frontend/
 
 ---
 
-## 🔌 Endpoints da API
-
-### 🔐 Autenticação
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| `POST` | `/api/auth/register` | Registrar novo usuário |
-| `POST` | `/api/auth/login` | Login de usuário |
-
-### 💸 Despesas
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| `GET` | `/api/expenses` | Listar todas as despesas |
-| `GET` | `/api/expenses/{id}` | Buscar despesa por ID |
-| `POST` | `/api/expenses` | Criar nova despesa |
-| `PUT` | `/api/expenses/{id}` | Atualizar despesa |
-| `DELETE` | `/api/expenses/{id}` | Deletar despesa |
-| `GET` | `/api/expenses/filter?date={date}` | Filtrar por data |
-
-### 👤 Usuários
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| `GET` | `/api/users/me` | Buscar usuário logado |
-| `PUT` | `/api/users/{id}` | Atualizar usuário |
-
----
 
 ## 📊 Modelo de Dados
 
 ### 📐 Diagrama de Classes (UML)
 
 ![Diagrama sem nome (2)](https://github.com/user-attachments/assets/7a26365b-62dc-4165-934a-5eadb4e21fa2)
+
 
 
 ### 🗄️ Modelo Entidade-Relacionamento (ER)
