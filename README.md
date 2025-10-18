@@ -230,42 +230,14 @@ frontend/
 
 ### 📐 Diagrama de Classes (UML)
 
-```
-┌─────────────────────┐         1        N  ┌──────────────────────┐
-│       User          │◄────────────────────┤      Expense         │
-├─────────────────────┤                      ├──────────────────────┤
-│ - id: Long          │                      │ - id: Long           │
-│ - username: String  │                      │ - description: String│
-│ - email: String     │                      │ - amount: Double     │
-│ - password: String  │                      │ - category: String   │
-│ - role: String      │                      │ - date: LocalDate    │
-└─────────────────────┘                      │ - user: User         │
-                                             └──────────────────────┘
-```
+![Diagrama sem nome (2)](https://github.com/user-attachments/assets/7a26365b-62dc-4165-934a-5eadb4e21fa2)
+
 
 ### 🗄️ Modelo Entidade-Relacionamento (ER)
+![e97aae50-7cdd-4bbe-b123-799c2bfa1f0e](https://github.com/user-attachments/assets/9fedb195-cda1-4e22-a855-0f16e60109e7)
 
-```sql
-users (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  username VARCHAR(50) NOT NULL UNIQUE,
-  email VARCHAR(100) NOT NULL UNIQUE,
-  password VARCHAR(255) NOT NULL,
-  role VARCHAR(20) DEFAULT 'USER',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
 
-expenses (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  description VARCHAR(200) NOT NULL,
-  amount DECIMAL(10, 2) NOT NULL,
-  category VARCHAR(50) NOT NULL,
-  date DATE NOT NULL,
-  user_id BIGINT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-)
-```
+
 
 ---
 
