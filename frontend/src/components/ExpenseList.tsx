@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { deleteExpense } from '../services/api';
 
@@ -19,9 +20,18 @@ interface Expense {
 interface ExpenseListProps {
   expenses: Expense[];
   onExpenseDeleted: () => void;
+  refreshing?: boolean;
+  onRefresh?: () => void;
+  ListHeaderComponent?: () => React.ReactElement;
 }
 
-const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, onExpenseDeleted }) => {
+const ExpenseList: React.FC<ExpenseListProps> = ({ 
+  expenses, 
+  onExpenseDeleted, 
+  refreshing = false, 
+  onRefresh,
+  ListHeaderComponent 
+}) => {
   const handleDelete = async (id: number) => {
     try {
       await deleteExpense(id);
@@ -69,13 +79,11 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, onExpenseDeleted })
     </View>
   );
 
-  if (expenses.length === 0) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>Nenhum gasto registrado ainda</Text>
-      </View>
-    );
-  }
+  const renderEmptyComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyText}>Nenhum gasto registrado ainda</Text>
+    </View>
+  );
 
   return (
     <FlatList
@@ -84,18 +92,27 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, onExpenseDeleted })
       renderItem={renderItem}
       style={styles.list}
       showsVerticalScrollIndicator={false}
+      ListHeaderComponent={ListHeaderComponent}
+      ListEmptyComponent={renderEmptyComponent}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        ) : undefined
+      }
     />
   );
 };
 
 const styles = StyleSheet.create({
   list: {
-    marginTop: 20,
+    flex: 1,
+    paddingHorizontal: 15,
   },
   item: {
     backgroundColor: '#fff',
     padding: 15,
     marginVertical: 5,
+    marginHorizontal: 0,
     borderRadius: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',

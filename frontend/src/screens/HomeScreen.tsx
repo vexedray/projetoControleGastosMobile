@@ -3,9 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   SafeAreaView,
-  RefreshControl,
 } from 'react-native';
 import ExpenseForm from '../components/ExpenseForm';
 import ExpenseList from '../components/ExpenseList';
@@ -45,26 +43,30 @@ export default function HomeScreen() {
     fetchExpenses();
   };
 
+  const renderHeader = () => (
+    <View>
+      <Text style={styles.title}>Controle de Gastos</Text>
+      
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Adicionar Gasto</Text>
+        <ExpenseForm onExpenseAdded={handleExpenseAdded} />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Lista de Gastos</Text>
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        <Text style={styles.title}>Controle de Gastos</Text>
-        
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Adicionar Gasto</Text>
-          <ExpenseForm onExpenseAdded={handleExpenseAdded} />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Lista de Gastos</Text>
-          <ExpenseList expenses={expenses} onExpenseDeleted={fetchExpenses} />
-        </View>
-      </ScrollView>
+      <ExpenseList 
+        expenses={expenses} 
+        onExpenseDeleted={fetchExpenses}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        ListHeaderComponent={renderHeader}
+      />
     </SafeAreaView>
   );
 }
