@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,12 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import { createExpense } from '../services/api';
 
+interface Category {
+  id: number;
+  nome: string;
+  descricao: string;
+}
+
 interface ExpenseFormProps {
   onExpenseAdded: () => void;
 }
@@ -18,6 +24,8 @@ interface ExpenseFormProps {
 const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpenseAdded }) => {
   const [valor, setValor] = useState('');
   const [tipo, setTipo] = useState('alimentacao');
+  const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
 
   const tiposGasto = [
@@ -30,24 +38,52 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpenseAdded }) => {
     { label: 'Outros', value: 'outros' },
   ];
 
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:8083/api/categories');
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      console.error('Erro ao carregar categorias:', error);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!valor || parseFloat(valor) <= 0) {
       Alert.alert('Erro', 'Por favor, insira um valor válido');
       return;
     }
 
+    if (!categoryId) {
+      Alert.alert('Erro', 'Por favor, selecione uma categoria');
+      return;
+    }
+
     setLoading(true);
     try {
-      const expenseData = {
-        valor: parseFloat(valor),
-        tipo,
-        data: new Date().toISOString(),
-      };
+      const response = await fetch('http://127.0.0.1:8083/gastos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: parseFloat(valor),
+          categoryId,
+        }),
+      });
 
-      await createExpense(expenseData);
-      setValor('');
-      setTipo('alimentacao');
-      Alert.alert('Sucesso', 'Gasto adicionado com sucesso!');
+      if (response.ok) {
+        setValor('');
+        setTipo('');
+        setCategoryId(null);
+        Alert.alert('Sucesso', 'Gasto adicionado com sucesso!');
+      } else {
+        Alert.alert('Erro', 'Erro ao adicionar gasto');
+      }
       onExpenseAdded();
     } catch (error) {
       console.error('Erro ao criar gasto:', error);
@@ -72,14 +108,24 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpenseAdded }) => {
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Tipo de Gasto</Text>
-        <TextInput
-          style={styles.input}
-          value={tipo}
-          onChangeText={setTipo}
-          placeholder="Tipo do gasto"
-          editable={!loading}
-        />
+        <Text style={styles.label}>Categoria</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={categoryId}
+            onValueChange={(itemValue) => setCategoryId(itemValue)}
+            style={styles.picker}
+            enabled={!loading}
+          >
+            <Picker.Item label="Selecione uma categoria" value={null} />
+            {categories.map((category) => (
+              <Picker.Item 
+                key={category.id} 
+                label={category.nome} 
+                value={category.id} 
+              />
+            ))}
+          </Picker>
+        </View>
       </View>
 
       <TouchableOpacity
@@ -132,6 +178,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    backgroundColor: '#fff',
+  },
+  picker: {
+    height: 50,
   },
 });
 

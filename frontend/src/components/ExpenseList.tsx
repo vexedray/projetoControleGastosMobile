@@ -13,8 +13,19 @@ import { deleteExpense } from '../services/api';
 interface Expense {
   id: number;
   valor: number;
-  tipo: string;
   data: string;
+}
+interface Category {
+  id: number;
+  nome: string;
+  descricao: string;
+}
+
+interface Expense {
+  id: number;
+  valor: number;
+  data: string;
+  category?: Category;
 }
 
 interface ExpenseListProps {
@@ -59,16 +70,16 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
     return date.toLocaleDateString('pt-BR');
   };
 
-  const formatType = (type: string) => {
-    return type.charAt(0).toUpperCase() + type.slice(1);
-  };
-
   const renderItem = ({ item }: { item: Expense }) => (
     <View style={styles.item}>
       <View style={styles.itemContent}>
-        <Text style={styles.type}>{formatType(item.tipo)}</Text>
+        <Text style={styles.type}>
+          {item.category && item.category.nome
+            ? item.category.nome.charAt(0).toUpperCase() + item.category.nome.slice(1)
+            : 'Sem categoria'}
+        </Text>
         <Text style={styles.value}>R$ {item.valor.toFixed(2)}</Text>
-        <Text style={styles.date}>{formatDate(item.data)}</Text>
+        <Text style={styles.date}>{new Date(item.data).toLocaleDateString('pt-BR')}</Text>
       </View>
       <TouchableOpacity
         style={styles.deleteButton}

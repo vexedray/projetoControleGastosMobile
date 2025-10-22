@@ -19,13 +19,21 @@ public class ExpenseService {
     public Expense createExpense(Expense expense) {
         return expenseRepository.save(expense);
     }
+    
+    public Expense save(Expense expense) {
+        return expenseRepository.save(expense);
+    }
+    
+    public List<Expense> findAll() {
+        return expenseRepository.findAll();
+    }
 
     public List<Expense> getAllExpenses() {
         return expenseRepository.findAll();
     }
 
-    public List<Expense> getExpensesByType(String tipo) {
-        return expenseRepository.findByTipo(tipo);
+    public List<Expense> getExpensesByCategory(Long categoryId) {
+        return expenseRepository.findByCategory_Id(categoryId);
     }
 
     public Optional<Expense> getExpenseById(Long id) {
@@ -37,7 +45,7 @@ public class ExpenseService {
     }
     
     public Map<String, Object> getExpensesByTypeGrouped() {
-        List<Object[]> results = expenseRepository.findExpensesByType();
+        List<Object[]> results = expenseRepository.findExpensesByCategory();
         Map<String, Object> groupedExpenses = new HashMap<>();
         
         for (Object[] result : results) {
@@ -46,4 +54,5 @@ public class ExpenseService {
         
         return groupedExpenses;
     }
+    
 }

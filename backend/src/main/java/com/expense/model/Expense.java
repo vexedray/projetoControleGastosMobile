@@ -16,18 +16,31 @@ public class Expense {
     private BigDecimal valor;
 
     @Column(nullable = false)
-    private String tipo;
-
-    @Column(nullable = false)
     private LocalDateTime data;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "category_id")
+    private Category category;
+
     public Expense() {
+        this.data = LocalDateTime.now();
     }
 
-    public Expense(BigDecimal valor, String tipo, LocalDateTime data) {
+    public Expense(BigDecimal valor, LocalDateTime data) {
         this.valor = valor;
-        this.tipo = tipo;
         this.data = data;
+    }
+
+    public Expense(BigDecimal valor, LocalDateTime data, Category category) {
+        this.valor = valor;
+        this.data = data;
+        this.category = category;
+    }
+    
+    public Expense(BigDecimal valor, Category category) {
+        this.valor = valor;
+        this.data = LocalDateTime.now();
+        this.category = category;
     }
 
     public Long getId() {
@@ -46,19 +59,19 @@ public class Expense {
         this.valor = valor;
     }
 
-    public String getTipo() {
-        return tipo;
-    }
-
-    public void setTipo(String tipo) {
-        this.tipo = tipo;
-    }
-
     public LocalDateTime getData() {
         return data;
     }
 
     public void setData(LocalDateTime data) {
         this.data = data;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
     }
 }

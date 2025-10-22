@@ -9,8 +9,8 @@ import java.util.List;
 @Repository
 public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     
-    List<Expense> findByTipo(String tipo);
+    List<Expense> findByCategory_Id(Long categoryId);
     
-    @Query("SELECT e.tipo, SUM(e.valor) FROM Expense e GROUP BY e.tipo")
-    List<Object[]> findExpensesByType();
+    @Query("SELECT c.nome, SUM(e.valor) FROM Expense e JOIN e.category c GROUP BY c.nome")
+    List<Object[]> findExpensesByCategory();
 }
