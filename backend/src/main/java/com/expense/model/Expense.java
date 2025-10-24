@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "gastos")
+@Table(name = "expense")
 public class Expense {
 
     @Id
@@ -22,6 +22,10 @@ public class Expense {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id")
+    private User user;
+
     public Expense() {
         this.data = LocalDateTime.now();
     }
@@ -31,16 +35,18 @@ public class Expense {
         this.data = data;
     }
 
-    public Expense(BigDecimal valor, LocalDateTime data, Category category) {
+    public Expense(BigDecimal valor, LocalDateTime data, Category category, User user) {
         this.valor = valor;
         this.data = data;
         this.category = category;
+        this.user = user;
     }
-    
-    public Expense(BigDecimal valor, Category category) {
+
+    public Expense(BigDecimal valor, Category category, User user) {
         this.valor = valor;
         this.data = LocalDateTime.now();
         this.category = category;
+        this.user = user;
     }
 
     public Long getId() {
@@ -73,5 +79,13 @@ public class Expense {
 
     public void setCategory(Category category) {
         this.category = category;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }
