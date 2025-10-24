@@ -13,10 +13,10 @@ public class Expense {
     private Long id;
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal valor;
+    private BigDecimal value;
 
     @Column(nullable = false)
-    private LocalDateTime data;
+    private LocalDateTime date;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id")
@@ -26,25 +26,9 @@ public class Expense {
     @JoinColumn(name = "user_id")
     private User user;
 
-    public Expense() {
-        this.data = LocalDateTime.now();
-    }
-
-    public Expense(BigDecimal valor, LocalDateTime data) {
-        this.valor = valor;
-        this.data = data;
-    }
-
-    public Expense(BigDecimal valor, LocalDateTime data, Category category, User user) {
-        this.valor = valor;
-        this.data = data;
-        this.category = category;
-        this.user = user;
-    }
-
-    public Expense(BigDecimal valor, Category category, User user) {
-        this.valor = valor;
-        this.data = LocalDateTime.now();
+    public Expense(BigDecimal value, Category category, User user) {
+        this.value = value;
+        this.date = LocalDateTime.now();
         this.category = category;
         this.user = user;
     }
@@ -57,28 +41,29 @@ public class Expense {
         this.id = id;
     }
 
-    public BigDecimal getValor() {
-        return valor;
+    public BigDecimal getvalue() {
+        return value;
     }
 
-    public void setValor(BigDecimal valor) {
-        this.valor = valor;
+    public void setvalue(BigDecimal value) {
+        this.value = value;
     }
 
-    public LocalDateTime getData() {
-        return data;
+    public LocalDateTime getdate() {
+        return date;
     }
 
-    public void setData(LocalDateTime data) {
-        this.data = data;
+    public BigDecimal getValue() {
+        return value;
     }
-
-    public Category getCategory() {
-        return category;
+    public void setValue(BigDecimal value) {
+        this.value = value;
     }
-
-    public void setCategory(Category category) {
-        this.category = category;
+    public LocalDateTime getDate() {
+        return date;
+    }
+    public void setDate(LocalDateTime date) {
+        this.date = date;
     }
 
     public User getUser() {

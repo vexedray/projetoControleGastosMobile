@@ -35,7 +35,7 @@ public class CategoryController {
     
     @PostMapping
     public Category createCategory(@RequestBody Category category) {
-        logger.info("POST /api/categories - Criando categoria: {}", category.getNome());
+        logger.info("POST /api/categories - Criando categoria: {}", category.getName());
         Category savedCategory = categoryService.save(category);
         logger.info("Categoria criada com ID: {}", savedCategory.getId());
         return savedCategory;

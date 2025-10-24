@@ -11,11 +11,11 @@ public class Category {
     private Long id;
     
     @Column(nullable = false)
-    private String nome;
+    private String name;
     
     @Column
-    private String descricao;
-    
+    private String description;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
@@ -24,12 +24,10 @@ public class Category {
         createdAt = LocalDateTime.now();
     }
     
-    // Constructors
-    public Category() {}
-    
-    public Category(String nome, String descricao) {
-        this.nome = nome;
-        this.descricao = descricao;
+
+    public Category(String name, String description) {
+        this.name = name;
+        this.description = description;
     }
     
     // Getters and Setters
@@ -40,21 +38,21 @@ public class Category {
     public void setId(Long id) { 
         this.id = id; 
     }
-    
-    public String getNome() { 
-        return nome; 
+
+    public String getName() {
+        return name;
     }
-    
-    public void setNome(String nome) { 
-        this.nome = nome; 
+
+    public void setName(String name) {
+        this.name = name;
     }
-    
-    public String getDescricao() { 
-        return descricao; 
+
+    public String getDescription() {
+        return description;
     }
-    
-    public void setDescricao(String descricao) { 
-        this.descricao = descricao; 
+
+    public void setDescription(String description) {
+        this.description = description;
     }
     
     public LocalDateTime getCreatedAt() { 
