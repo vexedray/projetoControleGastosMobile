@@ -26,6 +26,9 @@ public class Expense {
     @JoinColumn(name = "user_id")
     private User user;
 
+    public Expense() {
+    }
+
     public Expense(BigDecimal value, Category category, User user) {
         this.value = value;
         this.date = LocalDateTime.now();
