@@ -4,8 +4,11 @@ INSERT INTO user (name, email, password, created_at) VALUES
 
 INSERT INTO categories (name, description, created_at) VALUES
   ('Food', 'Food expenses', NOW()),
-  ('Transport', 'Transport expenses', NOW());
+  ('Transport', 'Transport expenses', NOW()),
+  ('Health', 'Health expenses', NOW());
 
 INSERT INTO expense (value, date, category_id, user_id) VALUES
   (50.00, NOW(), 1, 1),
-  (20.00, NOW(), 2, 2);
+  (20.00, NOW(), 2, 2),
+  (100.00, NOW(), 1, 2),
+  (75.50, NOW(), 3, 1);

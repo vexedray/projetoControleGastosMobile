@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS categories (
+CREATE TABLE categories (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(255),
