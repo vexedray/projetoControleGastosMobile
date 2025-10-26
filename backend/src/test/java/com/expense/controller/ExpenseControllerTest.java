@@ -1,0 +1,294 @@
+package com.expense.controller;
+
+import com.expense.dto.request.ExpenseRequestDTO;
+import com.expense.dto.response.ExpenseResponseDTO;
+import com.expense.mapper.ExpenseMapper;
+import com.expense.model.Category;
+import com.expense.model.Expense;
+import com.expense.model.User;
+import com.expense.service.CategoryService;
+import com.expense.service.ExpenseService;
+import com.expense.service.UserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(ExpenseController.class)
+class ExpenseControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private ExpenseService expenseService;
+
+    @MockBean
+    private CategoryService categoryService;
+
+    @MockBean
+    private UserService userService;
+
+    @MockBean
+    private ExpenseMapper expenseMapper;
+
+    private Expense expense;
+    private ExpenseRequestDTO requestDTO;
+    private ExpenseResponseDTO responseDTO;
+    private User user;
+    private Category category;
+
+    @BeforeEach
+    void setUp() {
+        user = new User();
+        user.setId(1L);
+        user.setName("John Doe");
+        user.setEmail("john@example.com");
+
+        category = new Category();
+        category.setId(1L);
+        category.setName("Food");
+
+        expense = new Expense();
+        expense.setId(1L);
+        expense.setValue(new BigDecimal("50.00"));
+        expense.setCategory(category);
+        expense.setUser(user);
+
+        requestDTO = new ExpenseRequestDTO();
+        requestDTO.setDescription("Lunch");
+        requestDTO.setAmount(new BigDecimal("50.00"));
+        requestDTO.setDate(LocalDate.now());
+        requestDTO.setCategoryId(1L);
+        requestDTO.setUserId(1L);
+
+        responseDTO = new ExpenseResponseDTO();
+        responseDTO.setId(1L);
+        responseDTO.setDescription("Lunch");
+        responseDTO.setAmount(new BigDecimal("50.00"));
+        responseDTO.setDate(LocalDate.now());
+    }
+
+    @Test
+    void getAllExpenses_ShouldReturnExpenseList() throws Exception {
+        // Arrange
+        List<Expense> expenses = Arrays.asList(expense);
+
+        when(expenseService.findAll()).thenReturn(expenses);
+        when(expenseMapper.toResponseDTO(any(Expense.class))).thenReturn(responseDTO);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/expenses")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].description").value("Lunch"))
+                .andExpect(jsonPath("$[0].amount").value(50.00));
+
+        verify(expenseService, times(1)).findAll();
+    }
+
+    @Test
+    void getExpenseById_WhenExpenseExists_ShouldReturnExpense() throws Exception {
+        // Arrange
+        when(expenseService.findById(1L)).thenReturn(Optional.of(expense));
+        when(expenseMapper.toResponseDTO(expense)).thenReturn(responseDTO);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/expenses/1")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.amount").value(50.00));
+
+        verify(expenseService, times(1)).findById(1L);
+    }
+
+    @Test
+    void getExpenseById_WhenExpenseDoesNotExist_ShouldReturnNotFound() throws Exception {
+        // Arrange
+        when(expenseService.findById(999L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        mockMvc.perform(get("/api/expenses/999")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        verify(expenseService, times(1)).findById(999L);
+    }
+
+    @Test
+    void getExpensesByUser_WhenUserExists_ShouldReturnExpenseList() throws Exception {
+        // Arrange
+        List<Expense> expenses = Arrays.asList(expense);
+
+        when(userService.findById(1L)).thenReturn(Optional.of(user));
+        when(expenseService.findByUser(user)).thenReturn(expenses);
+        when(expenseMapper.toResponseDTO(any(Expense.class))).thenReturn(responseDTO);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/expenses/user/1")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1));
+
+        verify(expenseService, times(1)).findByUser(user);
+    }
+
+    @Test
+    void getExpensesByUser_WhenUserDoesNotExist_ShouldReturnNotFound() throws Exception {
+        // Arrange
+        when(userService.findById(999L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        mockMvc.perform(get("/api/expenses/user/999")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        verify(expenseService, never()).findByUser(any());
+    }
+
+    @Test
+    void getExpensesByCategory_WhenCategoryExists_ShouldReturnExpenseList() throws Exception {
+        // Arrange
+        List<Expense> expenses = Arrays.asList(expense);
+
+        when(categoryService.findById(1L)).thenReturn(Optional.of(category));
+        when(expenseService.findByCategory(category)).thenReturn(expenses);
+        when(expenseMapper.toResponseDTO(any(Expense.class))).thenReturn(responseDTO);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/expenses/category/1")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1));
+
+        verify(expenseService, times(1)).findByCategory(category);
+    }
+
+    @Test
+    void getExpensesByCategory_WhenCategoryDoesNotExist_ShouldReturnNotFound() throws Exception {
+        // Arrange
+        when(categoryService.findById(999L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        mockMvc.perform(get("/api/expenses/category/999")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        verify(expenseService, never()).findByCategory(any());
+    }
+
+    @Test
+    void createExpense_WithValidData_ShouldReturnCreatedExpense() throws Exception {
+        // Arrange
+        when(categoryService.findById(1L)).thenReturn(Optional.of(category));
+        when(userService.findById(1L)).thenReturn(Optional.of(user));
+        when(expenseMapper.toEntity(any(ExpenseRequestDTO.class))).thenReturn(expense);
+        when(expenseService.save(any(Expense.class))).thenReturn(expense);
+        when(expenseMapper.toResponseDTO(any(Expense.class))).thenReturn(responseDTO);
+
+        // Act & Assert
+        mockMvc.perform(post("/api/expenses")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.amount").value(50.00));
+
+        verify(expenseService, times(1)).save(any(Expense.class));
+    }
+
+    @Test
+    void createExpense_WithInvalidData_ShouldReturnBadRequest() throws Exception {
+        // Arrange
+        ExpenseRequestDTO invalidDTO = new ExpenseRequestDTO();
+        invalidDTO.setDescription("");
+
+        // Act & Assert
+        mockMvc.perform(post("/api/expenses")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(invalidDTO)))
+                .andExpect(status().isBadRequest());
+
+        verify(expenseService, never()).save(any(Expense.class));
+    }
+
+    @Test
+    void updateExpense_WhenExpenseExists_ShouldReturnUpdatedExpense() throws Exception {
+        // Arrange
+        when(expenseService.findById(1L)).thenReturn(Optional.of(expense));
+        when(categoryService.findById(1L)).thenReturn(Optional.of(category));
+        when(expenseService.save(any(Expense.class))).thenReturn(expense);
+        when(expenseMapper.toResponseDTO(any(Expense.class))).thenReturn(responseDTO);
+
+        // Act & Assert
+        mockMvc.perform(put("/api/expenses/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1));
+
+        verify(expenseService, times(1)).save(any(Expense.class));
+    }
+
+    @Test
+    void updateExpense_WhenExpenseDoesNotExist_ShouldReturnNotFound() throws Exception {
+        // Arrange
+        when(expenseService.findById(999L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        mockMvc.perform(put("/api/expenses/999")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDTO)))
+                .andExpect(status().isNotFound());
+
+        verify(expenseService, never()).save(any(Expense.class));
+    }
+
+    @Test
+    void deleteExpense_WhenExpenseExists_ShouldReturnNoContent() throws Exception {
+        // Arrange
+        when(expenseService.findById(1L)).thenReturn(Optional.of(expense));
+        doNothing().when(expenseService).deleteExpense(1L);
+
+        // Act & Assert
+        mockMvc.perform(delete("/api/expenses/1")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+
+        verify(expenseService, times(1)).deleteExpense(1L);
+    }
+
+    @Test
+    void deleteExpense_WhenExpenseDoesNotExist_ShouldReturnNotFound() throws Exception {
+        // Arrange
+        when(expenseService.findById(999L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        mockMvc.perform(delete("/api/expenses/999")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        verify(expenseService, never()).deleteExpense(anyLong());
+    }
+}

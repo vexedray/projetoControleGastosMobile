@@ -7,11 +7,15 @@ import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.expense.dto.request.UserRequestDTO;
+import com.expense.dto.response.UserResponseDTO;
+import com.expense.mapper.UserMapper;
 import com.expense.model.User;
 import com.expense.service.UserService;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -22,61 +26,69 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private UserMapper userMapper;
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        logger.info("GET /api/users - Buscando todos os usuários");
+    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
+        logger.info("GET /api/users - Fetching all users");
         List<User> users = userService.getAllUsers();
-        logger.info("Encontrados {} usuários", users.size());
-        return ResponseEntity.ok(users);
+        List<UserResponseDTO> usersDTO = users.stream()
+                .map(userMapper::toResponseDTO)
+                .collect(Collectors.toList());
+        logger.info("Found {} users", usersDTO.size());
+        return ResponseEntity.ok(usersDTO);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        logger.info("GET /api/users/{} - Buscando usuário por ID", id);
+    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
+        logger.info("GET /api/users/{} - Fetching user by ID", id);
         return userService.getUserById(id)
                 .map(user -> {
-                    logger.info("Usuário encontrado: {}", user.getName());
-                    return ResponseEntity.ok(user);
+                    logger.info("User found: {}", user.getName());
+                    return ResponseEntity.ok(userMapper.toResponseDTO(user));
                 })
                 .orElseGet(() -> {
-                    logger.warn("Usuário com ID {} não encontrado", id);
+                    logger.warn("User with ID {} not found", id);
                     return ResponseEntity.notFound().build();
                 });
     }
     
     @GetMapping("/email/{email}")
-    public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
-        logger.info("GET /api/users/email/{} - Buscando usuário por email", email);
+    public ResponseEntity<UserResponseDTO> getUserByEmail(@PathVariable String email) {
+        logger.info("GET /api/users/email/{} - Fetching user by email", email);
         return userService.findByEmail(email)
                 .map(user -> {
-                    logger.info("Usuário encontrado: {}", user.getName());
-                    return ResponseEntity.ok(user);
+                    logger.info("User found: {}", user.getName());
+                    return ResponseEntity.ok(userMapper.toResponseDTO(user));
                 })
                 .orElseGet(() -> {
-                    logger.warn("Usuário com email {} não encontrado", email);
+                    logger.warn("User with email {} not found", email);
                     return ResponseEntity.notFound().build();
                 });
     }
 
     @PostMapping
-    public ResponseEntity<?> createUser(@Valid @RequestBody User user) {
-        logger.info("POST /api/users - Criando novo usuário: {}", user.getEmail());
+    public ResponseEntity<?> createUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
+        logger.info("POST /api/users - Creating new user: {}", userRequestDTO.getEmail());
         
         try {
-            // Validar se email já existe
-            if (userService.findByEmail(user.getEmail()).isPresent()) {
-                logger.error("Email {} já está em uso", user.getEmail());
+            // Validate if email already exists
+            if (userService.findByEmail(userRequestDTO.getEmail()).isPresent()) {
+                logger.error("Email {} is already in use", userRequestDTO.getEmail());
                 return ResponseEntity.badRequest()
-                    .body("Email já está em uso");
+                    .body("Email is already in use");
             }
             
+            User user = userMapper.toEntity(userRequestDTO);
             User createdUser = userService.createUser(user);
-            logger.info("Usuário criado com ID: {}", createdUser.getId());
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+            UserResponseDTO responseDTO = userMapper.toResponseDTO(createdUser);
+            logger.info("User created with ID: {}", createdUser.getId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
             
         } catch (Exception e) {
-            logger.error("Erro ao criar usuário: {}", e.getMessage());
+            logger.error("Error creating user: {}", e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -84,53 +96,54 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUser(
             @PathVariable Long id,
-            @Valid @RequestBody User user) {
-        logger.info("PUT /api/users/{} - Atualizando usuário", id);
+            @Valid @RequestBody UserRequestDTO userRequestDTO) {
+        logger.info("PUT /api/users/{} - Updating user", id);
         
         try {
             return userService.getUserById(id)
                     .map(existingUser -> {
-                        // Verificar se o novo email já está sendo usado por outro usuário
-                        if (!existingUser.getEmail().equals(user.getEmail())) {
-                            if (userService.findByEmail(user.getEmail()).isPresent()) {
-                                logger.error("Email {} já está em uso por outro usuário", user.getEmail());
+                        // Check if new email is already being used by another user
+                        if (!existingUser.getEmail().equals(userRequestDTO.getEmail())) {
+                            if (userService.findByEmail(userRequestDTO.getEmail()).isPresent()) {
+                                logger.error("Email {} is already in use by another user", userRequestDTO.getEmail());
                                 return ResponseEntity.badRequest()
-                                    .body("Email já está em uso por outro usuário");
+                                    .body("Email is already in use by another user");
                             }
                         }
                         
-                        existingUser.setName(user.getName());
-                        existingUser.setEmail(user.getEmail());
-                        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
-                            existingUser.setPassword(user.getPassword());
+                        existingUser.setName(userRequestDTO.getName());
+                        existingUser.setEmail(userRequestDTO.getEmail());
+                        if (userRequestDTO.getPassword() != null && !userRequestDTO.getPassword().isEmpty()) {
+                            existingUser.setPassword(userRequestDTO.getPassword());
                         }
                         
                         User updatedUser = userService.createUser(existingUser);
-                        logger.info("Usuário {} atualizado com sucesso", id);
-                        return ResponseEntity.ok((Object) updatedUser);
+                        UserResponseDTO responseDTO = userMapper.toResponseDTO(updatedUser);
+                        logger.info("User {} updated successfully", id);
+                        return ResponseEntity.ok((Object) responseDTO);
                     })
                     .orElseGet(() -> {
-                        logger.warn("Usuário com ID {} não encontrado para atualização", id);
+                        logger.warn("User with ID {} not found for update", id);
                         return ResponseEntity.notFound().build();
                     });
         } catch (Exception e) {
-            logger.error("Erro ao atualizar usuário: {}", e.getMessage());
+            logger.error("Error updating user: {}", e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        logger.info("DELETE /api/users/{} - Deletando usuário", id);
+        logger.info("DELETE /api/users/{} - Deleting user", id);
         
         return userService.getUserById(id)
                 .map(user -> {
                     userService.deleteUser(id);
-                    logger.info("Usuário {} deletado com sucesso", id);
+                    logger.info("User {} deleted successfully", id);
                     return ResponseEntity.noContent().<Void>build();
                 })
                 .orElseGet(() -> {
-                    logger.warn("Usuário com ID {} não encontrado para deleção", id);
+                    logger.warn("User with ID {} not found for deletion", id);
                     return ResponseEntity.notFound().build();
                 });
     }

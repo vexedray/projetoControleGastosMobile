@@ -19,55 +19,55 @@ public class UserService {
     private UserRepository userRepository;
     
     /**
-     * Busca todos os usuários
+     * Find all users
      */
     public List<User> getAllUsers() {
-        logger.debug("Buscando todos os usuários");
+        logger.debug("Fetching all users");
         List<User> users = userRepository.findAll();
-        logger.debug("Encontrados {} usuários", users.size());
+        logger.debug("Found {} users", users.size());
         return users;
     }
     
     /**
-     * Busca usuário por ID
+     * Find user by ID
      */
     public Optional<User> getUserById(Long id) {
-        logger.debug("Buscando usuário com ID: {}", id);
+        logger.debug("Fetching user with ID: {}", id);
         Optional<User> user = userRepository.findById(id);
         if (user.isPresent()) {
-            logger.debug("Usuário encontrado: {}", user.get().getName());
+            logger.debug("User found: {}", user.get().getName());
         } else {
-            logger.debug("Usuário com ID {} não encontrado", id);
+            logger.debug("User with ID {} not found", id);
         }
         return user;
     }
     
     /**
-     * Busca usuário por ID (alias para compatibilidade)
+     * Find user by ID (alias for compatibility)
      */
     public Optional<User> findById(Long id) {
         return getUserById(id);
     }
     
     /**
-     * Busca usuário por email
+     * Find user by email
      */
     public Optional<User> findByEmail(String email) {
-        logger.debug("Buscando usuário com email: {}", email);
+        logger.debug("Fetching user with email: {}", email);
         Optional<User> user = userRepository.findByEmail(email);
         if (user.isPresent()) {
-            logger.debug("Usuário encontrado: {}", user.get().getName());
+            logger.debug("User found: {}", user.get().getName());
         } else {
-            logger.debug("Usuário com email {} não encontrado", email);
+            logger.debug("User with email {} not found", email);
         }
         return user;
     }
     
     /**
-     * Busca usuários por nome (parcial)
+     * Find users by name (partial match)
      */
     public List<User> findByNameContaining(String name) {
-        logger.debug("Buscando usuários com nome contendo: {}", name);
+        logger.debug("Fetching users with name containing: {}", name);
         List<User> users = userRepository.findByNameContainingIgnoreCase(name);
         logger.debug("Encontrados {} usuários", users.size());
         return users;
