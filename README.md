@@ -206,8 +206,7 @@ frontend/
 
 
 ### 🗄️ Modelo Entidade-Relacionamento (ER)
-
-![Uploading Captura de tela 2025-10-28 212421.png…]()
+<img width="692" height="689" alt="image" src="https://github.com/user-attachments/assets/21f5d4a4-8660-4344-ab44-db031c68c6ab" />
 
 
 
