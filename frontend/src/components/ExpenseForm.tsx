@@ -9,12 +9,11 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { createExpense } from '../services/api';
 
 interface Category {
   id: number;
-  nome: string;
-  descricao: string;
+  name: string;
+  description?: string;
 }
 
 interface ExpenseFormProps {
@@ -44,11 +43,15 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpenseAdded }) => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8083/api/categories');
+      const response = await fetch('http://10.0.2.2:8083/api/categories');
       const data = await response.json();
       setCategories(data);
+      if (data.length > 0 && !categoryId) {
+        setCategoryId(data[0].id);
+      }
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
+      Alert.alert('Erro', 'Não foi possível carregar as categorias. Verifique se o backend está rodando.');
     }
   };
 
@@ -65,29 +68,36 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpenseAdded }) => {
 
     setLoading(true);
     try {
-      const response = await fetch('http://127.0.0.1:8083/gastos', {
+      const expense = {
+        description: tipo || 'Gasto',
+        amount: parseFloat(valor),
+        date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+        categoryId: categoryId,
+        userId: 1, // TODO: Implementar autenticação
+      };
+
+      const response = await fetch('http://10.0.2.2:8083/api/expenses', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          amount: parseFloat(valor),
-          categoryId,
-        }),
+        body: JSON.stringify(expense),
       });
 
       if (response.ok) {
         setValor('');
-        setTipo('');
+        setTipo('alimentacao');
         setCategoryId(null);
         Alert.alert('Sucesso', 'Gasto adicionado com sucesso!');
+        onExpenseAdded();
       } else {
+        const errorData = await response.json();
+        console.error('Erro do servidor:', errorData);
         Alert.alert('Erro', 'Erro ao adicionar gasto');
       }
-      onExpenseAdded();
     } catch (error) {
       console.error('Erro ao criar gasto:', error);
-      Alert.alert('Erro', 'Não foi possível adicionar o gasto');
+      Alert.alert('Erro', 'Não foi possível adicionar o gasto. Verifique se o backend está rodando.');
     } finally {
       setLoading(false);
     }
@@ -120,7 +130,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpenseAdded }) => {
             {categories.map((category) => (
               <Picker.Item 
                 key={category.id} 
-                label={category.nome} 
+                label={category.name} 
                 value={category.id} 
               />
             ))}

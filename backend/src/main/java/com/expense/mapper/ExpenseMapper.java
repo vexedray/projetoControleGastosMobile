@@ -25,7 +25,8 @@ public class ExpenseMapper {
         }
         
         Expense expense = new Expense();
-        expense.setValue(dto.getAmount()); // DTO uses 'amount', model uses 'value'
+        expense.setDescription(dto.getDescription());
+        expense.setAmount(dto.getAmount());
         // Convert LocalDate to LocalDateTime
         if (dto.getDate() != null) {
             expense.setDate(dto.getDate().atStartOfDay());
@@ -43,9 +44,8 @@ public class ExpenseMapper {
         
         ExpenseResponseDTO dto = new ExpenseResponseDTO();
         dto.setId(expense.getId());
-        // Use empty string for description since model doesn't have it
-        dto.setDescription("");
-        dto.setAmount(expense.getValue()); // Model uses 'value', DTO uses 'amount'
+        dto.setDescription(expense.getDescription());
+        dto.setAmount(expense.getAmount());
         // Convert LocalDateTime to LocalDate
         if (expense.getDate() != null) {
             dto.setDate(expense.getDate().toLocalDate());
@@ -63,8 +63,11 @@ public class ExpenseMapper {
             return;
         }
         
+        if (dto.getDescription() != null) {
+            expense.setDescription(dto.getDescription());
+        }
         if (dto.getAmount() != null) {
-            expense.setValue(dto.getAmount());
+            expense.setAmount(dto.getAmount());
         }
         if (dto.getDate() != null) {
             expense.setDate(dto.getDate().atStartOfDay());

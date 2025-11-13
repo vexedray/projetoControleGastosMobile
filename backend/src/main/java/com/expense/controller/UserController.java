@@ -147,4 +147,12 @@ public class UserController {
                     return ResponseEntity.notFound().build();
                 });
     }
+    
+    @GetMapping("/check-email/{email}")
+    public ResponseEntity<java.util.Map<String, Boolean>> checkEmailAvailability(@PathVariable String email) {
+        logger.info("GET /api/users/check-email/{} - Checking email availability", email);
+        boolean isAvailable = !userService.existsByEmail(email);
+        logger.info("Email {} is available: {}", email, isAvailable);
+        return ResponseEntity.ok(java.util.Map.of("available", isAvailable));
+    }
 }

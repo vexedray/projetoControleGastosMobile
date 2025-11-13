@@ -51,14 +51,6 @@ public class CategoryService {
     }
     
     /**
-     * Busca categorias por nome (parcial)
-     */
-    public List<Category> findByNameContaining(String name) {
-        logger.debug("Buscando categorias com nome contendo: {}", name);
-        return categoryRepository.findByNameContainingIgnoreCase(name);
-    }
-    
-    /**
      * Salva ou atualiza uma categoria
      */
     public Category save(Category category) {
@@ -111,11 +103,4 @@ public class CategoryService {
         return total;
     }
     
-    /**
-     * Busca categorias ordenadas por nome
-     */
-    public List<Category> findAllOrderByName() {
-        logger.debug("Buscando categorias ordenadas por nome");
-        return categoryRepository.findAllByOrderByNameAsc();
-    }
 }

@@ -1,74 +1,183 @@
 import axios from 'axios';
 
-interface Category {
-  id: number;
-  nome: string;
-  descricao: string;
+// ==================== TIPOS ====================
+
+export interface User {
+  id?: number;
+  name: string;
+  email: string;
+  password?: string;
   createdAt?: string;
 }
 
-interface Expense {
-  id: number;
-  valor: number;
-  data: string;
-  category?: Category;
+export interface Category {
+  id?: number;
+  name: string;
+  description?: string;
+  color?: string;
+  icon?: string;
+  createdAt?: string;
 }
 
-interface ExpenseFormData {
-  valor: number;
-  data: string;
-  category: { id: number };
+export interface Expense {
+  id?: number;
+  description: string;
+  amount: number;
+  date: string;
+  categoryId?: number;  // Opcional, pois não vem na resposta
+  userId?: number;      // Opcional, pois não vem na resposta
+  category?: Category;  // Objeto completo vem do backend
+  user?: User;          // Objeto completo vem do backend
 }
 
-const API_BASE_URL = 'http://10.0.2.2:8083';
-const EXPENSES_API_URL = `${API_BASE_URL}/gastos`;
-const CATEGORIES_API_URL = `${API_BASE_URL}/api/categories`;
+// ==================== CONFIGURAÇÃO ====================
 
-// ===== EXPENSES API =====
-export const createExpense = async (expense: ExpenseFormData): Promise<Expense> => {
-    try {
-        const response = await axios.post(EXPENSES_API_URL, expense);
-        return response.data;
-    } catch (error) {
-        throw error;
-    }
+// Para emulador Android use: 10.0.2.2
+// Para emulador iOS use: localhost
+// Para dispositivo físico use o IP da sua máquina (ex: 192.168.1.100)
+const API_BASE_URL = 'http://10.0.2.2:8083/api';
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Interceptors para debug
+api.interceptors.request.use(
+  (config) => {
+    console.log('Request:', config.method?.toUpperCase(), config.url);
+    return config;
+  },
+  (error) => {
+    console.error('Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+api.interceptors.response.use(
+  (response) => {
+    console.log('Response:', response.status, response.config.url);
+    return response;
+  },
+  (error) => {
+    console.error('Response Error:', error.response?.status, error.message);
+    return Promise.reject(error);
+  }
+);
+
+// ==================== USER API ====================
+
+export const userApi = {
+  getAll: async (): Promise<User[]> => {
+    const response = await api.get('/users');
+    return response.data;
+  },
+
+  getById: async (id: number): Promise<User> => {
+    const response = await api.get(`/users/${id}`);
+    return response.data;
+  },
+
+  getByEmail: async (email: string): Promise<User> => {
+    const response = await api.get(`/users/email/${email}`);
+    return response.data;
+  },
+
+  checkEmail: async (email: string): Promise<{ available: boolean }> => {
+    const response = await api.get(`/users/check-email/${email}`);
+    return response.data;
+  },
+
+  create: async (user: Omit<User, 'id' | 'createdAt'>): Promise<User> => {
+    const response = await api.post('/users', user);
+    return response.data;
+  },
+
+  update: async (id: number, user: Partial<User>): Promise<User> => {
+    const response = await api.put(`/users/${id}`, user);
+    return response.data;
+  },
+
+  delete: async (id: number): Promise<void> => {
+    await api.delete(`/users/${id}`);
+  },
 };
 
-export const getAllExpenses = async (): Promise<Expense[]> => {
-    try {
-        const response = await axios.get(EXPENSES_API_URL);
-        return response.data;
-    } catch (error) {
-        throw error;
-    }
+// ==================== CATEGORY API ====================
+
+export const categoryApi = {
+  getAll: async (): Promise<Category[]> => {
+    const response = await api.get('/categories');
+    return response.data;
+  },
+
+  getById: async (id: number): Promise<Category> => {
+    const response = await api.get(`/categories/${id}`);
+    return response.data;
+  },
+
+  create: async (category: Omit<Category, 'id' | 'createdAt'>): Promise<Category> => {
+    const response = await api.post('/categories', category);
+    return response.data;
+  },
+
+  update: async (id: number, category: Partial<Category>): Promise<Category> => {
+    const response = await api.put(`/categories/${id}`, category);
+    return response.data;
+  },
+
+  delete: async (id: number): Promise<void> => {
+    await api.delete(`/categories/${id}`);
+  },
 };
 
-// Remova getExpensesByType se não usa mais "tipo" no backend
-export const deleteExpense = async (id: number): Promise<void> => {
-    try {
-        await axios.delete(`${EXPENSES_API_URL}/${id}`);
-    } catch (error) {
-        throw error;
-    }
+// ==================== EXPENSE API ====================
+
+export const expenseApi = {
+  getAll: async (): Promise<Expense[]> => {
+    const response = await api.get('/expenses');
+    return response.data;
+  },
+
+  getById: async (id: number): Promise<Expense> => {
+    const response = await api.get(`/expenses/${id}`);
+    return response.data;
+  },
+
+  getByUser: async (userId: number): Promise<Expense[]> => {
+    const response = await api.get(`/expenses/user/${userId}`);
+    return response.data;
+  },
+
+  getByCategory: async (categoryId: number): Promise<Expense[]> => {
+    const response = await api.get(`/expenses/category/${categoryId}`);
+    return response.data;
+  },
+
+  create: async (expense: Omit<Expense, 'id'>): Promise<Expense> => {
+    const response = await api.post('/expenses', expense);
+    return response.data;
+  },
+
+  update: async (id: number, expense: Partial<Expense>): Promise<Expense> => {
+    const response = await api.put(`/expenses/${id}`, expense);
+    return response.data;
+  },
+
+  delete: async (id: number): Promise<void> => {
+    await api.delete(`/expenses/${id}`);
+  },
 };
 
-// ===== CATEGORIES API =====
-export const getAllCategories = async (): Promise<Category[]> => {
-    try {
-        const response = await axios.get(CATEGORIES_API_URL);
-        return response.data;
-    } catch (error) {
-        console.error('Erro ao buscar categorias:', error);
-        throw error;
-    }
-};
+// ==================== EXPORTS LEGADOS (compatibilidade) ====================
 
-export const createCategory = async (category: { nome: string; descricao: string }): Promise<Category> => {
-    try {
-        const response = await axios.post(CATEGORIES_API_URL, category);
-        return response.data;
-    } catch (error) {
-        console.error('Erro ao criar categoria:', error);
-        throw error;
-    }
-};
+export const getAllCategories = categoryApi.getAll;
+export const createCategory = categoryApi.create;
+export const getAllExpenses = expenseApi.getAll;
+export const createExpense = expenseApi.create;
+export const deleteExpense = expenseApi.delete;
+
+export default api;

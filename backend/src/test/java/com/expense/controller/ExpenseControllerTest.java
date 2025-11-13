@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -30,7 +31,8 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(ExpenseController.class)
+@WebMvcTest(controllers = ExpenseController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class ExpenseControllerTest {
 
     @Autowired
@@ -70,7 +72,7 @@ class ExpenseControllerTest {
 
         expense = new Expense();
         expense.setId(1L);
-        expense.setValue(new BigDecimal("50.00"));
+        expense.setAmount(new BigDecimal("50.00"));
         expense.setCategory(category);
         expense.setUser(user);
 
@@ -142,7 +144,7 @@ class ExpenseControllerTest {
         List<Expense> expenses = Arrays.asList(expense);
 
         when(userService.findById(1L)).thenReturn(Optional.of(user));
-        when(expenseService.findByUser(user)).thenReturn(expenses);
+        when(expenseService.findByUserId(1L)).thenReturn(expenses);
         when(expenseMapper.toResponseDTO(any(Expense.class))).thenReturn(responseDTO);
 
         // Act & Assert
@@ -151,7 +153,7 @@ class ExpenseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1));
 
-        verify(expenseService, times(1)).findByUser(user);
+        verify(expenseService, times(1)).findByUserId(1L);
     }
 
     @Test
@@ -164,7 +166,7 @@ class ExpenseControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
-        verify(expenseService, never()).findByUser(any());
+        verify(expenseService, never()).findByUserId(any());
     }
 
     @Test
@@ -173,7 +175,7 @@ class ExpenseControllerTest {
         List<Expense> expenses = Arrays.asList(expense);
 
         when(categoryService.findById(1L)).thenReturn(Optional.of(category));
-        when(expenseService.findByCategory(category)).thenReturn(expenses);
+        when(expenseService.findByCategoryId(1L)).thenReturn(expenses);
         when(expenseMapper.toResponseDTO(any(Expense.class))).thenReturn(responseDTO);
 
         // Act & Assert
@@ -182,7 +184,7 @@ class ExpenseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1));
 
-        verify(expenseService, times(1)).findByCategory(category);
+        verify(expenseService, times(1)).findByCategoryId(1L);
     }
 
     @Test
@@ -195,7 +197,7 @@ class ExpenseControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
-        verify(expenseService, never()).findByCategory(any());
+        verify(expenseService, never()).findByCategoryId(any());
     }
 
     @Test

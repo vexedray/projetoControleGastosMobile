@@ -47,7 +47,7 @@ class ExpenseServiceTest {
 
         expense = new Expense();
         expense.setId(1L);
-        expense.setValue(new BigDecimal("50.00"));
+        expense.setAmount(new BigDecimal("50.00"));
         expense.setCategory(category);
         expense.setUser(user);
     }
@@ -57,7 +57,7 @@ class ExpenseServiceTest {
         // Arrange
         Expense expense2 = new Expense();
         expense2.setId(2L);
-        expense2.setValue(new BigDecimal("100.00"));
+        expense2.setAmount(new BigDecimal("100.00"));
         expense2.setCategory(category);
         expense2.setUser(user);
 
@@ -70,8 +70,8 @@ class ExpenseServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
-        assertEquals(new BigDecimal("50.00"), result.get(0).getValue());
-        assertEquals(new BigDecimal("100.00"), result.get(1).getValue());
+        assertEquals(new BigDecimal("50.00"), result.get(0).getAmount());
+        assertEquals(new BigDecimal("100.00"), result.get(1).getAmount());
         verify(expenseRepository, times(1)).findAll();
     }
 
@@ -85,7 +85,7 @@ class ExpenseServiceTest {
 
         // Assert
         assertTrue(result.isPresent());
-        assertEquals(new BigDecimal("50.00"), result.get().getValue());
+        assertEquals(new BigDecimal("50.00"), result.get().getAmount());
         assertEquals("Food", result.get().getCategory().getName());
         verify(expenseRepository, times(1)).findById(1L);
     }
@@ -107,13 +107,13 @@ class ExpenseServiceTest {
     void testSave_ShouldSaveAndReturnExpense() {
         // Arrange
         Expense newExpense = new Expense();
-        newExpense.setValue(new BigDecimal("75.50"));
+        newExpense.setAmount(new BigDecimal("75.50"));
         newExpense.setCategory(category);
         newExpense.setUser(user);
 
         Expense savedExpense = new Expense();
         savedExpense.setId(3L);
-        savedExpense.setValue(new BigDecimal("75.50"));
+        savedExpense.setAmount(new BigDecimal("75.50"));
         savedExpense.setCategory(category);
         savedExpense.setUser(user);
 
@@ -125,7 +125,7 @@ class ExpenseServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(3L, result.getId());
-        assertEquals(new BigDecimal("75.50"), result.getValue());
+        assertEquals(new BigDecimal("75.50"), result.getAmount());
         verify(expenseRepository, times(1)).save(any(Expense.class));
     }
 
@@ -142,42 +142,42 @@ class ExpenseServiceTest {
     }
 
     @Test
-    void testFindByUser_ShouldReturnUserExpenses() {
+    void testFindByUserId_ShouldReturnUserExpenses() {
         // Arrange
         List<Expense> userExpenses = Arrays.asList(expense);
-        when(expenseRepository.findByUser(user)).thenReturn(userExpenses);
+        when(expenseRepository.findByUser_Id(1L)).thenReturn(userExpenses);
 
         // Act
-        List<Expense> result = expenseService.findByUser(user);
+        List<Expense> result = expenseService.findByUserId(1L);
 
         // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(expense.getValue(), result.get(0).getValue());
-        verify(expenseRepository, times(1)).findByUser(user);
+        assertEquals(expense.getAmount(), result.get(0).getAmount());
+        verify(expenseRepository, times(1)).findByUser_Id(1L);
     }
 
     @Test
-    void testFindByCategory_ShouldReturnCategoryExpenses() {
+    void testFindByCategoryId_ShouldReturnCategoryExpenses() {
         // Arrange
         List<Expense> categoryExpenses = Arrays.asList(expense);
-        when(expenseRepository.findByCategory(category)).thenReturn(categoryExpenses);
+        when(expenseRepository.findByCategory_Id(1L)).thenReturn(categoryExpenses);
 
         // Act
-        List<Expense> result = expenseService.findByCategory(category);
+        List<Expense> result = expenseService.findByCategoryId(1L);
 
         // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(expense.getValue(), result.get(0).getValue());
-        verify(expenseRepository, times(1)).findByCategory(category);
+        assertEquals(expense.getAmount(), result.get(0).getAmount());
+        verify(expenseRepository, times(1)).findByCategory_Id(1L);
     }
 
     @Test
     void testSave_WithNegativeValue_ShouldThrowException() {
         // Arrange
         Expense invalidExpense = new Expense();
-        invalidExpense.setValue(new BigDecimal("-10.00"));
+        invalidExpense.setAmount(new BigDecimal("-10.00"));
         invalidExpense.setCategory(category);
         invalidExpense.setUser(user);
 
@@ -208,7 +208,7 @@ class ExpenseServiceTest {
         // Arrange
         Expense updatedExpense = new Expense();
         updatedExpense.setId(1L);
-        updatedExpense.setValue(new BigDecimal("150.00"));
+        updatedExpense.setAmount(new BigDecimal("150.00"));
         updatedExpense.setCategory(category);
         updatedExpense.setUser(user);
 
@@ -219,7 +219,7 @@ class ExpenseServiceTest {
 
         // Assert
         assertNotNull(result);
-        assertEquals(new BigDecimal("150.00"), result.getValue());
+        assertEquals(new BigDecimal("150.00"), result.getAmount());
         verify(expenseRepository, times(1)).save(any(Expense.class));
     }
 
@@ -237,16 +237,16 @@ class ExpenseServiceTest {
     }
 
     @Test
-    void testFindByUser_WhenUserHasNoExpenses_ShouldReturnEmptyList() {
+    void testFindByUserId_WhenUserHasNoExpenses_ShouldReturnEmptyList() {
         // Arrange
-        when(expenseRepository.findByUser(user)).thenReturn(Arrays.asList());
+        when(expenseRepository.findByUser_Id(1L)).thenReturn(Arrays.asList());
 
         // Act
-        List<Expense> result = expenseService.findByUser(user);
+        List<Expense> result = expenseService.findByUserId(1L);
 
         // Assert
         assertNotNull(result);
         assertTrue(result.isEmpty());
-        verify(expenseRepository, times(1)).findByUser(user);
+        verify(expenseRepository, times(1)).findByUser_Id(1L);
     }
 }

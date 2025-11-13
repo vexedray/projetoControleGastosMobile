@@ -19,6 +19,8 @@ public class CategoryMapper {
         Category category = new Category();
         category.setName(dto.getName());
         category.setDescription(dto.getDescription());
+        category.setColor(dto.getColor());
+        category.setIcon(dto.getIcon());
         return category;
     }
     
@@ -34,7 +36,8 @@ public class CategoryMapper {
         dto.setId(category.getId());
         dto.setName(category.getName());
         dto.setDescription(category.getDescription());
-        // Color and icon are in the DTO but not in the model yet
+        dto.setColor(category.getColor());
+        dto.setIcon(category.getIcon());
         return dto;
     }
     
@@ -51,6 +54,12 @@ public class CategoryMapper {
         }
         if (dto.getDescription() != null) {
             category.setDescription(dto.getDescription());
+        }
+        if (dto.getColor() != null) {
+            category.setColor(dto.getColor());
+        }
+        if (dto.getIcon() != null) {
+            category.setIcon(dto.getIcon());
         }
     }
 }

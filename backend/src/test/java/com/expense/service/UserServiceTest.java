@@ -205,18 +205,4 @@ class UserServiceTest {
         assertTrue(result);
     }
 
-    @Test
-    void findByNameContaining_ShouldReturnMatchingUsers() {
-        // Arrange
-        List<User> users = Arrays.asList(testUser);
-        when(userRepository.findByNameContainingIgnoreCase("Test")).thenReturn(users);
-
-        // Act
-        List<User> result = userService.findByNameContaining("Test");
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        verify(userRepository, times(1)).findByNameContainingIgnoreCase("Test");
-    }
 }

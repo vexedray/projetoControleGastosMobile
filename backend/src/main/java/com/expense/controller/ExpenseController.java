@@ -55,7 +55,7 @@ public class ExpenseController {
         logger.info("GET /api/expenses/{} - Fetching expense by ID", id);
         return expenseService.findById(id)
                 .map(expense -> {
-                    logger.info("Expense found: value={}", expense.getValue());
+                    logger.info("Expense found: amount={}", expense.getAmount());
                     return ResponseEntity.ok(expenseMapper.toResponseDTO(expense));
                 })
                 .orElseGet(() -> {
@@ -70,7 +70,7 @@ public class ExpenseController {
         
         return userService.findById(userId)
                 .map(user -> {
-                    List<Expense> expenses = expenseService.findByUser(user);
+                    List<Expense> expenses = expenseService.findByUserId(userId);
                     List<ExpenseResponseDTO> response = expenses.stream()
                             .map(expenseMapper::toResponseDTO)
                             .collect(Collectors.toList());
@@ -89,7 +89,7 @@ public class ExpenseController {
         
         return categoryService.findById(categoryId)
                 .map(category -> {
-                    List<Expense> expenses = expenseService.findByCategory(category);
+                    List<Expense> expenses = expenseService.findByCategoryId(categoryId);
                     List<ExpenseResponseDTO> response = expenses.stream()
                             .map(expenseMapper::toResponseDTO)
                             .collect(Collectors.toList());
@@ -144,7 +144,7 @@ public class ExpenseController {
         try {
             return expenseService.findById(id)
                     .map(existingExpense -> {
-                        existingExpense.setValue(requestDTO.getAmount());
+                        existingExpense.setAmount(requestDTO.getAmount());
                         
                         if (requestDTO.getCategoryId() != null) {
                             Category category = categoryService.findById(requestDTO.getCategoryId())

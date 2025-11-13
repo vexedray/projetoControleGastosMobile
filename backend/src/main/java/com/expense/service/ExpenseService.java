@@ -29,9 +29,9 @@ public class ExpenseService {
      */
     public Expense save(Expense expense) {
         if (expense.getId() == null) {
-            logger.debug("Criando nova despesa: valor={}", expense.getValue());
+            logger.debug("Criando nova despesa: valor={}", expense.getAmount());
         } else {
-            logger.debug("Atualizando despesa ID {}: valor={}", expense.getId(), expense.getValue());
+            logger.debug("Atualizando despesa ID {}: valor={}", expense.getId(), expense.getAmount());
         }
         Expense saved = expenseRepository.save(expense);
         logger.debug("Despesa salva com ID: {}", saved.getId());
@@ -55,31 +55,11 @@ public class ExpenseService {
         logger.debug("Buscando despesa com ID: {}", id);
         Optional<Expense> expense = expenseRepository.findById(id);
         if (expense.isPresent()) {
-            logger.debug("Despesa encontrada: valor={}", expense.get().getValue());
+            logger.debug("Despesa encontrada: valor={}", expense.get().getAmount());
         } else {
             logger.debug("Despesa com ID {} não encontrada", id);
         }
         return expense;
-    }
-    
-    /**
-     * Busca despesas por usuário (objeto)
-     */
-    public List<Expense> findByUser(User user) {
-        logger.debug("Buscando despesas do usuário: {}", user.getId());
-        List<Expense> expenses = expenseRepository.findByUser(user);
-        logger.debug("Encontradas {} despesas para o usuário {}", expenses.size(), user.getId());
-        return expenses;
-    }
-    
-    /**
-     * Busca despesas por categoria (objeto)
-     */
-    public List<Expense> findByCategory(Category category) {
-        logger.debug("Buscando despesas da categoria: {}", category.getId());
-        List<Expense> expenses = expenseRepository.findByCategory(category);
-        logger.debug("Encontradas {} despesas para a categoria {}", expenses.size(), category.getId());
-        return expenses;
     }
     
     /**
@@ -98,21 +78,7 @@ public class ExpenseService {
         return expenseRepository.findByCategory_Id(categoryId);
     }
     
-    /**
-     * Busca despesas por usuário ordenadas por data (mais recente primeiro)
-     */
-    public List<Expense> findByUserIdOrderByDate(Long userId) {
-        logger.debug("Buscando despesas do usuário {} ordenadas por data", userId);
-        return expenseRepository.findByUserIdOrderByDateDesc(userId);
-    }
-    
-    /**
-     * Busca despesas por categoria ordenadas por data
-     */
-    public List<Expense> findByCategoryIdOrderByDate(Long categoryId) {
-        logger.debug("Buscando despesas da categoria {} ordenadas por data", categoryId);
-        return expenseRepository.findByCategoryIdOrderByDateDesc(categoryId);
-    }
+
     
     /**
      * Deleta despesa por ID
@@ -150,9 +116,9 @@ public class ExpenseService {
      */
     public BigDecimal getTotalByUser(User user) {
         logger.debug("Calculando total de despesas do usuário: {}", user.getId());
-        List<Expense> expenses = expenseRepository.findByUser(user);
+        List<Expense> expenses = expenseRepository.findByUser_Id(user.getId());
         BigDecimal total = expenses.stream()
-                .map(Expense::getValue)
+                .map(Expense::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         logger.debug("Total de despesas do usuário {}: {}", user.getId(), total);
         return total;
@@ -165,7 +131,7 @@ public class ExpenseService {
         logger.debug("Calculando total de despesas do usuário ID: {}", userId);
         List<Expense> expenses = expenseRepository.findByUser_Id(userId);
         BigDecimal total = expenses.stream()
-                .map(Expense::getValue)
+                .map(Expense::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         logger.debug("Total de despesas do usuário {}: {}", userId, total);
         return total;
@@ -176,9 +142,9 @@ public class ExpenseService {
      */
     public BigDecimal getTotalByCategory(Category category) {
         logger.debug("Calculando total de despesas da categoria: {}", category.getId());
-        List<Expense> expenses = expenseRepository.findByCategory(category);
+        List<Expense> expenses = expenseRepository.findByCategory_Id(category.getId());
         BigDecimal total = expenses.stream()
-                .map(Expense::getValue)
+                .map(Expense::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         logger.debug("Total de despesas da categoria {}: {}", category.getId(), total);
         return total;
@@ -191,7 +157,7 @@ public class ExpenseService {
         logger.debug("Calculando total de despesas da categoria ID: {}", categoryId);
         List<Expense> expenses = expenseRepository.findByCategory_Id(categoryId);
         BigDecimal total = expenses.stream()
-                .map(Expense::getValue)
+                .map(Expense::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         logger.debug("Total de despesas da categoria {}: {}", categoryId, total);
         return total;
@@ -246,7 +212,7 @@ public class ExpenseService {
      */
     public List<Expense> findByUserAndDateRange(User user, LocalDateTime startDate, LocalDateTime endDate) {
         logger.debug("Buscando despesas do usuário {} entre {} e {}", user.getId(), startDate, endDate);
-        List<Expense> expenses = expenseRepository.findByUserAndDateBetween(user, startDate, endDate);
+        List<Expense> expenses = expenseRepository.findByUserIdAndDateBetween(user.getId(), startDate, endDate);
         logger.debug("Encontradas {} despesas do usuário {} no período", expenses.size(), user.getId());
         return expenses;
     }
@@ -266,7 +232,7 @@ public class ExpenseService {
         logger.debug("Calculando total de despesas entre {} e {}", startDate, endDate);
         List<Expense> expenses = expenseRepository.findByDateBetween(startDate, endDate);
         BigDecimal total = expenses.stream()
-                .map(Expense::getValue)
+                .map(Expense::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         logger.debug("Total no período: {}", total);
         return total;
@@ -279,27 +245,13 @@ public class ExpenseService {
         logger.debug("Calculando total do usuário {} entre {} e {}", userId, startDate, endDate);
         List<Expense> expenses = expenseRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
         BigDecimal total = expenses.stream()
-                .map(Expense::getValue)
+                .map(Expense::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         logger.debug("Total do usuário {} no período: {}", userId, total);
         return total;
     }
     
-    /**
-     * Busca despesas com valor acima de um limite
-     */
-    public List<Expense> findByValueGreaterThan(BigDecimal value) {
-        logger.debug("Buscando despesas com valor maior que {}", value);
-        return expenseRepository.findByValueGreaterThan(value);
-    }
-    
-    /**
-     * Busca despesas com valor entre dois limites
-     */
-    public List<Expense> findByValueBetween(BigDecimal minValue, BigDecimal maxValue) {
-        logger.debug("Buscando despesas com valor entre {} e {}", minValue, maxValue);
-        return expenseRepository.findByValueBetween(minValue, maxValue);
-    }
+
     
     /**
      * Conta despesas por categoria

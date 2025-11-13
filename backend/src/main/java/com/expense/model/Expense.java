@@ -14,11 +14,14 @@ public class Expense {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column
+    private String description;
     
     @Column(nullable = false, precision = 10, scale = 2)
     @NotNull(message = "Valor é obrigatório")
     @Positive(message = "Valor deve ser positivo")
-    private BigDecimal value;
+    private BigDecimal amount;
     
     @Column(nullable = false)
     private LocalDateTime date;
@@ -44,8 +47,16 @@ public class Expense {
     public Expense() {
     }
     
-    public Expense(BigDecimal value, Category category, User user) {
-        this.value = value;
+    public Expense(BigDecimal amount, Category category, User user) {
+        this.amount = amount;
+        this.category = category;
+        this.user = user;
+    }
+
+    public Expense(String description, BigDecimal amount, LocalDateTime date, Category category, User user) {
+        this.description = description;
+        this.amount = amount;
+        this.date = date;
         this.category = category;
         this.user = user;
     }
@@ -58,13 +69,21 @@ public class Expense {
     public void setId(Long id) {
         this.id = id;
     }
-    
-    public BigDecimal getValue() {
-        return value;
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
     
-    public void setValue(BigDecimal value) {
-        this.value = value;
+    public BigDecimal getAmount() {
+        return amount;
+    }
+    
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
     }
     
     public LocalDateTime getDate() {

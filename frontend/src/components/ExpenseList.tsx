@@ -8,25 +8,7 @@ import {
   Alert,
   RefreshControl,
 } from 'react-native';
-import { deleteExpense } from '../services/api';
-
-interface Expense {
-  id: number;
-  valor: number;
-  data: string;
-}
-interface Category {
-  id: number;
-  nome: string;
-  descricao: string;
-}
-
-interface Expense {
-  id: number;
-  valor: number;
-  data: string;
-  category?: Category;
-}
+import { expenseApi, Expense } from '../services/api';
 
 interface ExpenseListProps {
   expenses: Expense[];
@@ -45,7 +27,7 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
 }) => {
   const handleDelete = async (id: number) => {
     try {
-      await deleteExpense(id);
+      await expenseApi.delete(id);
       onExpenseDeleted();
       Alert.alert('Sucesso', 'Gasto deletado com sucesso!');
     } catch (error) {
@@ -73,17 +55,18 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
   const renderItem = ({ item }: { item: Expense }) => (
     <View style={styles.item}>
       <View style={styles.itemContent}>
-        <Text style={styles.type}>
-          {item.category && item.category.nome
-            ? item.category.nome.charAt(0).toUpperCase() + item.category.nome.slice(1)
-            : 'Sem categoria'}
+        <Text style={styles.description}>
+          {item.description}
         </Text>
-        <Text style={styles.value}>R$ {item.valor.toFixed(2)}</Text>
-        <Text style={styles.date}>{new Date(item.data).toLocaleDateString('pt-BR')}</Text>
+        <Text style={styles.type}>
+          {item.category?.name || 'Sem categoria'}
+        </Text>
+        <Text style={styles.value}>R$ {item.amount.toFixed(2)}</Text>
+        <Text style={styles.date}>{new Date(item.date).toLocaleDateString('pt-BR')}</Text>
       </View>
       <TouchableOpacity
         style={styles.deleteButton}
-        onPress={() => confirmDelete(item.id)}
+        onPress={() => item.id && confirmDelete(item.id)}
       >
         <Text style={styles.deleteButtonText}>Deletar</Text>
       </TouchableOpacity>
@@ -99,7 +82,7 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
   return (
     <FlatList
       data={expenses}
-      keyExtractor={(item) => item.id.toString()}
+      keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
       renderItem={renderItem}
       style={styles.list}
       showsVerticalScrollIndicator={false}
@@ -137,10 +120,15 @@ const styles = StyleSheet.create({
   itemContent: {
     flex: 1,
   },
-  type: {
-    fontSize: 16,
+  description: {
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
+    marginBottom: 4,
+  },
+  type: {
+    fontSize: 14,
+    color: '#007AFF',
     marginBottom: 4,
   },
   value: {

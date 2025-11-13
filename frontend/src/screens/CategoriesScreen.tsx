@@ -10,19 +10,19 @@ import {
   RefreshControl, 
   SafeAreaView 
 } from 'react-native';
-import { getAllCategories, createCategory } from '../services/api';
+import { categoryApi } from '../services/api';
 
 interface Category {
-  id: number;
-  nome: string;
-  descricao: string;
+  id?: number;
+  name: string;
+  description?: string;
   createdAt?: string;
 }
 
 export default function CategoriesScreen() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [nome, setNome] = useState('');
-  const [descricao, setDescricao] = useState('');
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -33,12 +33,12 @@ export default function CategoriesScreen() {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const data = await getAllCategories();
+      const data = await categoryApi.getAll();
       setCategories(data);
       console.log('Categorias carregadas:', data.length);
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
-      Alert.alert('Erro', 'Erro ao carregar categorias');
+      Alert.alert('Erro', 'Erro ao carregar categorias. Verifique se o backend está rodando.');
     } finally {
       setLoading(false);
     }
@@ -51,31 +51,31 @@ export default function CategoriesScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!nome.trim()) {
+    if (!name.trim()) {
       Alert.alert('Erro', 'Nome é obrigatório');
       return;
     }
 
     try {
-      await createCategory({
-        nome: nome.trim(),
-        descricao: descricao.trim(),
+      await categoryApi.create({
+        name: name.trim(),
+        description: description.trim(),
       });
       
-      setNome('');
-      setDescricao('');
+      setName('');
+      setDescription('');
       fetchCategories();
       Alert.alert('Sucesso', 'Categoria criada com sucesso!');
     } catch (error) {
       console.error('Erro ao criar categoria:', error);
-      Alert.alert('Erro', 'Erro ao criar categoria');
+      Alert.alert('Erro', 'Erro ao criar categoria. Verifique se o backend está rodando.');
     }
   };
 
   const renderCategory = ({ item }: { item: Category }) => (
     <View style={styles.categoryItem}>
-      <Text style={styles.categoryName}>{item.nome}</Text>
-      {item.descricao && <Text style={styles.categoryDescription}>{item.descricao}</Text>}
+      <Text style={styles.categoryName}>{item.name}</Text>
+      {item.description && <Text style={styles.categoryDescription}>{item.description}</Text>}
       {item.createdAt && (
         <Text style={styles.categoryDate}>
           Criado em: {new Date(item.createdAt).toLocaleDateString('pt-BR')}
@@ -92,15 +92,15 @@ export default function CategoriesScreen() {
         <TextInput
           style={styles.input}
           placeholder="Nome da categoria"
-          value={nome}
-          onChangeText={setNome}
+          value={name}
+          onChangeText={setName}
         />
         
         <TextInput
           style={styles.input}
           placeholder="Descrição (opcional)"
-          value={descricao}
-          onChangeText={setDescricao}
+          value={description}
+          onChangeText={setDescription}
           multiline
         />
         
@@ -113,7 +113,7 @@ export default function CategoriesScreen() {
       <FlatList
         data={categories}
         renderItem={renderCategory}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
         style={styles.list}
         refreshControl={
           <RefreshControl

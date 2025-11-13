@@ -7,14 +7,7 @@ import {
 } from 'react-native';
 import ExpenseForm from '../components/ExpenseForm';
 import ExpenseList from '../components/ExpenseList';
-import { getAllExpenses } from '../services/api';
-
-interface Expense {
-  id: number;
-  valor: number;
-  tipo: string;
-  data: string;
-}
+import { expenseApi, Expense } from '../services/api';
 
 export default function HomeScreen() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -26,7 +19,7 @@ export default function HomeScreen() {
 
   const fetchExpenses = async () => {
     try {
-      const data = await getAllExpenses();
+      const data = await expenseApi.getAll();
       setExpenses(data);
     } catch (error) {
       console.error('Erro ao buscar gastos:', error);

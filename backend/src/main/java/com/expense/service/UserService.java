@@ -64,32 +64,6 @@ public class UserService {
     }
     
     /**
-     * Find users by name (partial match)
-     */
-    public List<User> findByNameContaining(String name) {
-        logger.debug("Fetching users with name containing: {}", name);
-        List<User> users = userRepository.findByNameContainingIgnoreCase(name);
-        logger.debug("Encontrados {} usuários", users.size());
-        return users;
-    }
-    
-    /**
-     * Busca usuários ordenados por nome
-     */
-    public List<User> findAllOrderByName() {
-        logger.debug("Buscando usuários ordenados por nome");
-        return userRepository.findAllByOrderByNameAsc();
-    }
-    
-    /**
-     * Busca usuários ordenados por data de criação
-     */
-    public List<User> findAllOrderByCreatedAt() {
-        logger.debug("Buscando usuários ordenados por data de criação");
-        return userRepository.findAllByOrderByCreatedAtDesc();
-    }
-    
-    /**
      * Cria ou atualiza um usuário
      */
     public User createUser(User user) {
