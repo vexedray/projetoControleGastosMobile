@@ -24,7 +24,7 @@ public class Category {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Expense> expenses;
     
     @PrePersist

@@ -23,12 +23,12 @@ public class Expense {
     @Column(nullable = false)
     private LocalDateTime date;
     
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     @NotNull(message = "Categoria é obrigatória")
     private Category category;
     
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @NotNull(message = "Usuário é obrigatório")
     private User user;

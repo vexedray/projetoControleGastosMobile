@@ -6,6 +6,9 @@ import com.expense.model.User;
 import com.expense.service.ExpenseService;
 import com.expense.service.CategoryService;
 import com.expense.service.UserService;
+import com.expense.dto.request.ExpenseRequestDTO;
+import com.expense.dto.response.ExpenseResponseDTO;
+import com.expense.mapper.ExpenseMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,9 +16,11 @@ import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.validation.Valid;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/expenses")
@@ -34,20 +39,24 @@ public class ExpenseController {
     private UserService userService;
 
     @GetMapping
-    public ResponseEntity<List<Expense>> getAllExpenses() {
+    public ResponseEntity<List<ExpenseResponseDTO>> getAllExpenses() {
         logger.info("GET /api/expenses - Buscando todas as despesas");
         List<Expense> expenses = expenseService.findAll();
-        logger.info("Encontradas {} despesas", expenses.size());
-        return ResponseEntity.ok(expenses);
+        List<ExpenseResponseDTO> expenseDTOs = expenses.stream()
+                .map(ExpenseMapper::toDTO)
+                .collect(Collectors.toList());
+        logger.info("Encontradas {} despesas", expenseDTOs.size());
+        return ResponseEntity.ok(expenseDTOs);
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<Expense> getExpenseById(@PathVariable Long id) {
+    public ResponseEntity<ExpenseResponseDTO> getExpenseById(@PathVariable Long id) {
         logger.info("GET /api/expenses/{} - Buscando despesa por ID", id);
         return expenseService.findById(id)
                 .map(expense -> {
+                    ExpenseResponseDTO expenseDTO = ExpenseMapper.toDTO(expense);
                     logger.info("Despesa encontrada: valor={}", expense.getValue());
-                    return ResponseEntity.ok(expense);
+                    return ResponseEntity.ok(expenseDTO);
                 })
                 .orElseGet(() -> {
                     logger.warn("Despesa com ID {} não encontrada", id);
@@ -56,14 +65,17 @@ public class ExpenseController {
     }
     
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Expense>> getExpensesByUser(@PathVariable Long userId) {
+    public ResponseEntity<List<ExpenseResponseDTO>> getExpensesByUser(@PathVariable Long userId) {
         logger.info("GET /api/expenses/user/{} - Buscando despesas do usuário", userId);
         
         return userService.findById(userId)
                 .map(user -> {
                     List<Expense> expenses = expenseService.findByUser(user);
-                    logger.info("Encontradas {} despesas para o usuário {}", expenses.size(), userId);
-                    return ResponseEntity.ok(expenses);
+                    List<ExpenseResponseDTO> expenseDTOs = expenses.stream()
+                            .map(ExpenseMapper::toDTO)
+                            .collect(Collectors.toList());
+                    logger.info("Encontradas {} despesas para o usuário {}", expenseDTOs.size(), userId);
+                    return ResponseEntity.ok(expenseDTOs);
                 })
                 .orElseGet(() -> {
                     logger.warn("Usuário com ID {} não encontrado", userId);
@@ -72,14 +84,17 @@ public class ExpenseController {
     }
     
     @GetMapping("/category/{categoryId}")
-    public ResponseEntity<List<Expense>> getExpensesByCategory(@PathVariable Long categoryId) {
+    public ResponseEntity<List<ExpenseResponseDTO>> getExpensesByCategory(@PathVariable Long categoryId) {
         logger.info("GET /api/expenses/category/{} - Buscando despesas da categoria", categoryId);
         
         return categoryService.findById(categoryId)
                 .map(category -> {
                     List<Expense> expenses = expenseService.findByCategory(category);
-                    logger.info("Encontradas {} despesas para a categoria {}", expenses.size(), categoryId);
-                    return ResponseEntity.ok(expenses);
+                    List<ExpenseResponseDTO> expenseDTOs = expenses.stream()
+                            .map(ExpenseMapper::toDTO)
+                            .collect(Collectors.toList());
+                    logger.info("Encontradas {} despesas para a categoria {}", expenseDTOs.size(), categoryId);
+                    return ResponseEntity.ok(expenseDTOs);
                 })
                 .orElseGet(() -> {
                     logger.warn("Categoria com ID {} não encontrada", categoryId);
@@ -88,52 +103,29 @@ public class ExpenseController {
     }
     
     @PostMapping
-    public ResponseEntity<?> createExpense(@RequestBody Map<String, Object> expenseData) {
+    public ResponseEntity<?> createExpense(@Valid @RequestBody ExpenseRequestDTO expenseRequestDTO) {
         logger.info("POST /api/expenses - Criando nova despesa");
         
         try {
-            // Validação dos campos obrigatórios
-            if (!expenseData.containsKey("value") || 
-                !expenseData.containsKey("categoryId") || 
-                !expenseData.containsKey("userId")) {
-                logger.error("Campos obrigatórios ausentes");
-                return ResponseEntity.badRequest()
-                    .body("Campos obrigatórios: value, categoryId, userId");
-            }
-            
-            BigDecimal value = new BigDecimal(expenseData.get("value").toString());
-            Long categoryId = Long.valueOf(expenseData.get("categoryId").toString());
-            Long userId = Long.valueOf(expenseData.get("userId").toString());
-
-            // Validação de valor positivo
-            if (value.compareTo(BigDecimal.ZERO) <= 0) {
-                logger.error("Valor da despesa deve ser positivo");
-                return ResponseEntity.badRequest()
-                    .body("O valor da despesa deve ser maior que zero");
-            }
-
-            Category category = categoryService.findById(categoryId)
+            Category category = categoryService.findById(expenseRequestDTO.categoryId())
                 .orElseThrow(() -> {
-                    logger.error("Categoria com ID {} não encontrada", categoryId);
+                    logger.error("Categoria com ID {} não encontrada", expenseRequestDTO.categoryId());
                     return new RuntimeException("Categoria não encontrada");
                 });
                 
-            User user = userService.findById(userId)
+            User user = userService.findById(expenseRequestDTO.userId())
                 .orElseThrow(() -> {
-                    logger.error("Usuário com ID {} não encontrado", userId);
+                    logger.error("Usuário com ID {} não encontrado", expenseRequestDTO.userId());
                     return new RuntimeException("Usuário não encontrado");
                 });
 
-            Expense expense = new Expense(value, category, user);
+            Expense expense = ExpenseMapper.toEntity(expenseRequestDTO, category, user);
             Expense savedExpense = expenseService.save(expense);
+            ExpenseResponseDTO responseDTO = ExpenseMapper.toDTO(savedExpense);
             
-            logger.info("Despesa criada com ID: {} - valor: {}", savedExpense.getId(), value);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedExpense);
+            logger.info("Despesa criada com ID: {} - valor: {}", savedExpense.getId(), expenseRequestDTO.value());
+            return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
             
-        } catch (NumberFormatException e) {
-            logger.error("Formato de número inválido", e);
-            return ResponseEntity.badRequest()
-                .body("Formato de número inválido para value, categoryId ou userId");
         } catch (RuntimeException e) {
             logger.error("Erro ao criar despesa: {}", e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -143,31 +135,24 @@ public class ExpenseController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateExpense(
             @PathVariable Long id,
-            @RequestBody Map<String, Object> expenseData) {
+            @Valid @RequestBody ExpenseRequestDTO expenseRequestDTO) {
         logger.info("PUT /api/expenses/{} - Atualizando despesa", id);
         
         try {
             return expenseService.findById(id)
                 .map(existingExpense -> {
-                    if (expenseData.containsKey("value")) {
-                        BigDecimal value = new BigDecimal(expenseData.get("value").toString());
-                        if (value.compareTo(BigDecimal.ZERO) <= 0) {
-                            return ResponseEntity.badRequest()
-                                .body("O valor da despesa deve ser maior que zero");
-                        }
-                        existingExpense.setValue(value);
-                    }
+                    Category category = categoryService.findById(expenseRequestDTO.categoryId())
+                        .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
                     
-                    if (expenseData.containsKey("categoryId")) {
-                        Long categoryId = Long.valueOf(expenseData.get("categoryId").toString());
-                        Category category = categoryService.findById(categoryId)
-                            .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
-                        existingExpense.setCategory(category);
-                    }
+                    User user = userService.findById(expenseRequestDTO.userId())
+                        .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
                     
+                    ExpenseMapper.updateEntityWithRelations(existingExpense, expenseRequestDTO, category, user);
                     Expense updated = expenseService.save(existingExpense);
+                    ExpenseResponseDTO responseDTO = ExpenseMapper.toDTO(updated);
+                    
                     logger.info("Despesa {} atualizada com sucesso", id);
-                    return ResponseEntity.ok((Object) updated);
+                    return ResponseEntity.ok((Object) responseDTO);
                 })
                 .orElseGet(() -> {
                     logger.warn("Despesa com ID {} não encontrada para atualização", id);

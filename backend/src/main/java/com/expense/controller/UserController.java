@@ -9,9 +9,13 @@ import org.slf4j.LoggerFactory;
 
 import com.expense.model.User;
 import com.expense.service.UserService;
+import com.expense.dto.request.UserRequestDTO;
+import com.expense.dto.response.UserResponseDTO;
+import com.expense.mapper.UserMapper;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -24,20 +28,24 @@ public class UserController {
     private UserService userService;
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
         logger.info("GET /api/users - Buscando todos os usuários");
         List<User> users = userService.getAllUsers();
-        logger.info("Encontrados {} usuários", users.size());
-        return ResponseEntity.ok(users);
+        List<UserResponseDTO> userDTOs = users.stream()
+                .map(UserMapper::toDTO)
+                .collect(Collectors.toList());
+        logger.info("Encontrados {} usuários", userDTOs.size());
+        return ResponseEntity.ok(userDTOs);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
         logger.info("GET /api/users/{} - Buscando usuário por ID", id);
         return userService.getUserById(id)
                 .map(user -> {
+                    UserResponseDTO userDTO = UserMapper.toDTO(user);
                     logger.info("Usuário encontrado: {}", user.getName());
-                    return ResponseEntity.ok(user);
+                    return ResponseEntity.ok(userDTO);
                 })
                 .orElseGet(() -> {
                     logger.warn("Usuário com ID {} não encontrado", id);
@@ -46,12 +54,13 @@ public class UserController {
     }
     
     @GetMapping("/email/{email}")
-    public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
+    public ResponseEntity<UserResponseDTO> getUserByEmail(@PathVariable String email) {
         logger.info("GET /api/users/email/{} - Buscando usuário por email", email);
         return userService.findByEmail(email)
                 .map(user -> {
+                    UserResponseDTO userDTO = UserMapper.toDTO(user);
                     logger.info("Usuário encontrado: {}", user.getName());
-                    return ResponseEntity.ok(user);
+                    return ResponseEntity.ok(userDTO);
                 })
                 .orElseGet(() -> {
                     logger.warn("Usuário com email {} não encontrado", email);
@@ -60,20 +69,23 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createUser(@Valid @RequestBody User user) {
-        logger.info("POST /api/users - Criando novo usuário: {}", user.getEmail());
+    public ResponseEntity<?> createUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
+        logger.info("POST /api/users - Criando novo usuário: {}", userRequestDTO.email());
         
         try {
             // Validar se email já existe
-            if (userService.findByEmail(user.getEmail()).isPresent()) {
-                logger.error("Email {} já está em uso", user.getEmail());
+            if (userService.findByEmail(userRequestDTO.email()).isPresent()) {
+                logger.error("Email {} já está em uso", userRequestDTO.email());
                 return ResponseEntity.badRequest()
                     .body("Email já está em uso");
             }
             
+            User user = UserMapper.toEntity(userRequestDTO);
             User createdUser = userService.createUser(user);
+            UserResponseDTO responseDTO = UserMapper.toDTO(createdUser);
+            
             logger.info("Usuário criado com ID: {}", createdUser.getId());
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+            return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
             
         } catch (Exception e) {
             logger.error("Erro ao criar usuário: {}", e.getMessage());
@@ -84,30 +96,27 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUser(
             @PathVariable Long id,
-            @Valid @RequestBody User user) {
+            @Valid @RequestBody UserRequestDTO userRequestDTO) {
         logger.info("PUT /api/users/{} - Atualizando usuário", id);
         
         try {
             return userService.getUserById(id)
                     .map(existingUser -> {
                         // Verificar se o novo email já está sendo usado por outro usuário
-                        if (!existingUser.getEmail().equals(user.getEmail())) {
-                            if (userService.findByEmail(user.getEmail()).isPresent()) {
-                                logger.error("Email {} já está em uso por outro usuário", user.getEmail());
+                        if (!existingUser.getEmail().equals(userRequestDTO.email())) {
+                            if (userService.findByEmail(userRequestDTO.email()).isPresent()) {
+                                logger.error("Email {} já está em uso por outro usuário", userRequestDTO.email());
                                 return ResponseEntity.badRequest()
                                     .body("Email já está em uso por outro usuário");
                             }
                         }
                         
-                        existingUser.setName(user.getName());
-                        existingUser.setEmail(user.getEmail());
-                        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
-                            existingUser.setPassword(user.getPassword());
-                        }
-                        
+                        UserMapper.updateEntity(existingUser, userRequestDTO);
                         User updatedUser = userService.createUser(existingUser);
+                        UserResponseDTO responseDTO = UserMapper.toDTO(updatedUser);
+                        
                         logger.info("Usuário {} atualizado com sucesso", id);
-                        return ResponseEntity.ok((Object) updatedUser);
+                        return ResponseEntity.ok((Object) responseDTO);
                     })
                     .orElseGet(() -> {
                         logger.warn("Usuário com ID {} não encontrado para atualização", id);
