@@ -110,7 +110,7 @@ jwt.secret=sua_chave_secreta_aqui
 jwt.expiration=86400000
 ```
 
-O backend estará rodando em `http://localhost:8083`
+O backend estará rodando em `http://localhost:8080`
 
 ### 📱 Configuração do Frontend
 
@@ -218,7 +218,7 @@ frontend/
 
 Acesse a documentação interativa da API em:
 ```
-http://localhost:8080/swagger-ui.html
+http://localhost:8083/swagger-ui.html
 ```
 
 
