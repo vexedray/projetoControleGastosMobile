@@ -110,7 +110,7 @@ jwt.secret=sua_chave_secreta_aqui
 jwt.expiration=86400000
 ```
 
-O backend estará rodando em `http://localhost:8080`
+O backend estará rodando em `http://localhost:8083`
 
 ### 📱 Configuração do Frontend
 
