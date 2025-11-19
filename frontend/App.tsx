@@ -1,50 +1,102 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
-import CategoriesScreen from './src/screens/CategoriesScreen';
+import { Feather } from '@expo/vector-icons';
+import { ActivityIndicator, View, StyleSheet, TouchableOpacity } from 'react-native';
+
 import HomeScreen from './src/screens/HomeScreen';
+import CategoriesScreen from './src/screens/CategoriesScreen';
+import LoginScreen from './src/screens/LoginScreen';
+import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 
 const Tab = createBottomTabNavigator();
 
-export default function App() {
+function AppNavigator() {
+  const { user, loading, logout } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#3B82F6" />
+      </View>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen />;
+  }
+
   return (
     <NavigationContainer>
       <Tab.Navigator
         screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName: keyof typeof Ionicons.glyphMap;
+          tabBarIcon: ({ color, size }) => {
+            let iconName: keyof typeof Feather.glyphMap = 'home';
 
-            if (route.name === 'Categorias') {
-              iconName = focused ? 'list' : 'list-outline';
-            } else if (route.name === 'Gastos') {
-              iconName = focused ? 'wallet' : 'wallet-outline';
-            } else {
-              iconName = 'help';
+            if (route.name === 'Início') {
+              iconName = 'home';
+            } else if (route.name === 'Categorias') {
+              iconName = 'list';
             }
 
-            return <Ionicons name={iconName} size={size} color={color} />;
+            return <Feather name={iconName} size={size} color={color} />;
           },
-          tabBarActiveTintColor: '#007AFF',
-          tabBarInactiveTintColor: 'gray',
-          headerShown: false,
+          tabBarActiveTintColor: '#3B82F6',
+          tabBarInactiveTintColor: '#9CA3AF',
+          tabBarStyle: {
+            backgroundColor: '#FFFFFF',
+            borderTopWidth: 1,
+            borderTopColor: '#E5E7EB',
+            height: 60,
+            paddingBottom: 8,
+            paddingTop: 8,
+          },
+          headerStyle: {
+            backgroundColor: '#FFFFFF',
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 1,
+            borderBottomColor: '#E5E7EB',
+          },
+          headerTitleStyle: {
+            fontWeight: 'bold',
+            fontSize: 18,
+          },
+          headerRight: () => (
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={logout}
+              activeOpacity={0.7}
+            >
+              <Feather name="log-out" size={20} color="#EF4444" />
+            </TouchableOpacity>
+          ),
         })}
       >
-        <Tab.Screen 
-          name="Categorias" 
-          component={CategoriesScreen}
-          options={{
-            tabBarLabel: 'Categorias',
-          }}
-        />
-        <Tab.Screen 
-          name="Gastos" 
-          component={HomeScreen}
-          options={{
-            tabBarLabel: 'Gastos',
-          }}
-        />
+        <Tab.Screen name="Início" component={HomeScreen} />
+        <Tab.Screen name="Categorias" component={CategoriesScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
 }
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppNavigator />
+    </AuthProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+  },
+  logoutButton: {
+    marginRight: 16,
+    padding: 8,
+  },
+});
