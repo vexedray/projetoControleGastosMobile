@@ -29,19 +29,12 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      // Por enquanto, vamos usar o usuário de teste
-      const response = await api.get('/api/users');
-      const user = response.data.find((u: any) => u.email === email);
-
-      if (user) {
-        await login(user);
-        Alert.alert('Sucesso', 'Login realizado com sucesso!');
-      } else {
-        Alert.alert('Erro', 'Usuário não encontrado');
-      }
-    } catch (error) {
+      await login(email, password);
+      Alert.alert('Sucesso', 'Login realizado com sucesso!');
+    } catch (error: any) {
       console.error('Erro ao fazer login:', error);
-      Alert.alert('Erro', 'Não foi possível fazer login');
+      const errorMessage = error.response?.data?.error || 'Email ou senha inválidos';
+      Alert.alert('Erro', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -119,7 +112,7 @@ export default function LoginScreen() {
             <Text style={styles.testInfoTitle}>Usuários de teste:</Text>
             <Text style={styles.testInfoText}>• rayssa@email.com</Text>
             <Text style={styles.testInfoText}>• joao@email.com</Text>
-            <Text style={styles.testInfoText}>Senha: qualquer valor</Text>
+            <Text style={styles.testInfoText}>Senha: senha123</Text>
           </View>
         </View>
       </View>

@@ -15,11 +15,11 @@ import com.expense.service.UserService;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "*")
 public class UserController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
@@ -42,30 +42,32 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
+    public ResponseEntity<?> getUserById(@PathVariable Long id) {
         logger.info("GET /api/users/{} - Fetching user by ID", id);
         return userService.getUserById(id)
                 .map(user -> {
                     logger.info("User found: {}", user.getName());
-                    return ResponseEntity.ok(userMapper.toResponseDTO(user));
+                    return ResponseEntity.ok((Object) userMapper.toResponseDTO(user));
                 })
                 .orElseGet(() -> {
                     logger.warn("User with ID {} not found", id);
-                    return ResponseEntity.notFound().build();
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Usuário não encontrado"));
                 });
     }
     
     @GetMapping("/email/{email}")
-    public ResponseEntity<UserResponseDTO> getUserByEmail(@PathVariable String email) {
+    public ResponseEntity<?> getUserByEmail(@PathVariable String email) {
         logger.info("GET /api/users/email/{} - Fetching user by email", email);
         return userService.findByEmail(email)
                 .map(user -> {
                     logger.info("User found: {}", user.getName());
-                    return ResponseEntity.ok(userMapper.toResponseDTO(user));
+                    return ResponseEntity.ok((Object) userMapper.toResponseDTO(user));
                 })
                 .orElseGet(() -> {
                     logger.warn("User with email {} not found", email);
-                    return ResponseEntity.notFound().build();
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Usuário não encontrado"));
                 });
     }
 
@@ -75,10 +77,10 @@ public class UserController {
         
         try {
             // Validate if email already exists
-            if (userService.findByEmail(userRequestDTO.getEmail()).isPresent()) {
+            if (userService.existsByEmail(userRequestDTO.getEmail())) {
                 logger.error("Email {} is already in use", userRequestDTO.getEmail());
                 return ResponseEntity.badRequest()
-                    .body("Email is already in use");
+                    .body(Map.of("error", "Email já está em uso"));
             }
             
             User user = userMapper.toEntity(userRequestDTO);
@@ -89,7 +91,7 @@ public class UserController {
             
         } catch (Exception e) {
             logger.error("Error creating user: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
     
@@ -104,10 +106,10 @@ public class UserController {
                     .map(existingUser -> {
                         // Check if new email is already being used by another user
                         if (!existingUser.getEmail().equals(userRequestDTO.getEmail())) {
-                            if (userService.findByEmail(userRequestDTO.getEmail()).isPresent()) {
+                            if (userService.existsByEmail(userRequestDTO.getEmail())) {
                                 logger.error("Email {} is already in use by another user", userRequestDTO.getEmail());
                                 return ResponseEntity.badRequest()
-                                    .body("Email is already in use by another user");
+                                    .body(Map.of("error", "Email já está em uso por outro usuário"));
                             }
                         }
                         
@@ -124,27 +126,29 @@ public class UserController {
                     })
                     .orElseGet(() -> {
                         logger.warn("User with ID {} not found for update", id);
-                        return ResponseEntity.notFound().build();
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(Map.of("error", "Usuário não encontrado"));
                     });
         } catch (Exception e) {
             logger.error("Error updating user: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         logger.info("DELETE /api/users/{} - Deleting user", id);
         
         return userService.getUserById(id)
                 .map(user -> {
                     userService.deleteUser(id);
                     logger.info("User {} deleted successfully", id);
-                    return ResponseEntity.noContent().<Void>build();
+                    return ResponseEntity.noContent().build();
                 })
                 .orElseGet(() -> {
                     logger.warn("User with ID {} not found for deletion", id);
-                    return ResponseEntity.notFound().build();
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Usuário não encontrado"));
                 });
     }
     

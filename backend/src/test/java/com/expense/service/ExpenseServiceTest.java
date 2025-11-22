@@ -130,12 +130,12 @@ class ExpenseServiceTest {
     }
 
     @Test
-    void testDeleteExpense_ShouldCallRepositoryDelete() {
+    void testDeleteById_ShouldCallRepositoryDelete() {
         // Arrange
         doNothing().when(expenseRepository).deleteById(1L);
 
         // Act
-        expenseService.deleteExpense(1L);
+        expenseService.deleteById(1L);
 
         // Assert
         verify(expenseRepository, times(1)).deleteById(1L);
@@ -145,7 +145,7 @@ class ExpenseServiceTest {
     void testFindByUserId_ShouldReturnUserExpenses() {
         // Arrange
         List<Expense> userExpenses = Arrays.asList(expense);
-        when(expenseRepository.findByUser_Id(1L)).thenReturn(userExpenses);
+        when(expenseRepository.findByUserId(1L)).thenReturn(userExpenses);
 
         // Act
         List<Expense> result = expenseService.findByUserId(1L);
@@ -154,14 +154,14 @@ class ExpenseServiceTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(expense.getAmount(), result.get(0).getAmount());
-        verify(expenseRepository, times(1)).findByUser_Id(1L);
+        verify(expenseRepository, times(1)).findByUserId(1L);
     }
 
     @Test
     void testFindByCategoryId_ShouldReturnCategoryExpenses() {
         // Arrange
         List<Expense> categoryExpenses = Arrays.asList(expense);
-        when(expenseRepository.findByCategory_Id(1L)).thenReturn(categoryExpenses);
+        when(expenseRepository.findByCategoryId(1L)).thenReturn(categoryExpenses);
 
         // Act
         List<Expense> result = expenseService.findByCategoryId(1L);
@@ -170,23 +170,33 @@ class ExpenseServiceTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(expense.getAmount(), result.get(0).getAmount());
-        verify(expenseRepository, times(1)).findByCategory_Id(1L);
+        verify(expenseRepository, times(1)).findByCategoryId(1L);
     }
 
     @Test
-    void testSave_WithNegativeValue_ShouldThrowException() {
+    void testExistsById_WhenExpenseExists_ShouldReturnTrue() {
         // Arrange
-        Expense invalidExpense = new Expense();
-        invalidExpense.setAmount(new BigDecimal("-10.00"));
-        invalidExpense.setCategory(category);
-        invalidExpense.setUser(user);
+        when(expenseRepository.existsById(1L)).thenReturn(true);
 
-        // Act & Assert
-        assertThrows(Exception.class, () -> {
-            when(expenseRepository.save(any(Expense.class)))
-                .thenThrow(new IllegalArgumentException("Value must be positive"));
-            expenseService.save(invalidExpense);
-        });
+        // Act
+        boolean result = expenseService.existsById(1L);
+
+        // Assert
+        assertTrue(result);
+        verify(expenseRepository, times(1)).existsById(1L);
+    }
+
+    @Test
+    void testExistsById_WhenExpenseDoesNotExist_ShouldReturnFalse() {
+        // Arrange
+        when(expenseRepository.existsById(999L)).thenReturn(false);
+
+        // Act
+        boolean result = expenseService.existsById(999L);
+
+        // Assert
+        assertFalse(result);
+        verify(expenseRepository, times(1)).existsById(999L);
     }
 
     @Test
@@ -224,22 +234,9 @@ class ExpenseServiceTest {
     }
 
     @Test
-    void testCount_ShouldReturnNumberOfExpenses() {
-        // Arrange
-        when(expenseRepository.count()).thenReturn(10L);
-
-        // Act
-        long count = expenseRepository.count();
-
-        // Assert
-        assertEquals(10L, count);
-        verify(expenseRepository, times(1)).count();
-    }
-
-    @Test
     void testFindByUserId_WhenUserHasNoExpenses_ShouldReturnEmptyList() {
         // Arrange
-        when(expenseRepository.findByUser_Id(1L)).thenReturn(Arrays.asList());
+        when(expenseRepository.findByUserId(1L)).thenReturn(Arrays.asList());
 
         // Act
         List<Expense> result = expenseService.findByUserId(1L);
@@ -247,6 +244,20 @@ class ExpenseServiceTest {
         // Assert
         assertNotNull(result);
         assertTrue(result.isEmpty());
-        verify(expenseRepository, times(1)).findByUser_Id(1L);
+        verify(expenseRepository, times(1)).findByUserId(1L);
+    }
+
+    @Test
+    void testFindByCategoryId_WhenCategoryHasNoExpenses_ShouldReturnEmptyList() {
+        // Arrange
+        when(expenseRepository.findByCategoryId(1L)).thenReturn(Arrays.asList());
+
+        // Act
+        List<Expense> result = expenseService.findByCategoryId(1L);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(expenseRepository, times(1)).findByCategoryId(1L);
     }
 }

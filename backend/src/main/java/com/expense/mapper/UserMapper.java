@@ -46,12 +46,9 @@ public class UserMapper {
             return;
         }
         
-        if (dto.getName() != null) {
-            user.setName(dto.getName());
-        }
-        if (dto.getEmail() != null) {
-            user.setEmail(dto.getEmail());
-        }
+        user.setName(dto.getName());
+        user.setEmail(dto.getEmail());
+        
         if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
             user.setPassword(dto.getPassword());
         }

@@ -7,15 +7,17 @@ public class LoginResponseDTO {
     
     private String token;
     private String type = "Bearer";
-    private UserResponseDTO user;
+    private String email;
+    private String name;
     
     // Constructors
     public LoginResponseDTO() {
     }
     
-    public LoginResponseDTO(String token, UserResponseDTO user) {
+    public LoginResponseDTO(String token, String email, String name) {
         this.token = token;
-        this.user = user;
+        this.email = email;
+        this.name = name;
     }
     
     // Getters and Setters
@@ -35,11 +37,19 @@ public class LoginResponseDTO {
         this.type = type;
     }
     
-    public UserResponseDTO getUser() {
-        return user;
+    public String getEmail() {
+        return email;
     }
     
-    public void setUser(UserResponseDTO user) {
-        this.user = user;
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
     }
 }

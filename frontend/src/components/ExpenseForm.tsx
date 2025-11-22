@@ -9,6 +9,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Category {
   id: number;
@@ -21,6 +23,7 @@ interface ExpenseFormProps {
 }
 
 const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpenseAdded }) => {
+  const { user } = useAuth();
   const [valor, setValor] = useState('');
   const [tipo, setTipo] = useState('alimentacao');
   const [categoryId, setCategoryId] = useState<number | null>(null);
@@ -43,15 +46,14 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpenseAdded }) => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://10.0.2.2:8083/api/categories');
-      const data = await response.json();
-      setCategories(data);
-      if (data.length > 0 && !categoryId) {
-        setCategoryId(data[0].id);
+      const response = await api.get('/categories');
+      setCategories(response.data);
+      if (response.data.length > 0 && !categoryId) {
+        setCategoryId(response.data[0].id);
       }
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
-      Alert.alert('Erro', 'Não foi possível carregar as categorias. Verifique se o backend está rodando.');
+      Alert.alert('Erro', 'Não foi possível carregar as categorias.');
     }
   };
 
@@ -66,38 +68,31 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpenseAdded }) => {
       return;
     }
 
+    if (!user) {
+      Alert.alert('Erro', 'Usuário não autenticado');
+      return;
+    }
+
     setLoading(true);
     try {
       const expense = {
         description: tipo || 'Gasto',
         amount: parseFloat(valor),
-        date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+        date: new Date().toISOString().split('T')[0],
         categoryId: categoryId,
-        userId: 1, // TODO: Implementar autenticação
+        userId: user.id,
       };
 
-      const response = await fetch('http://10.0.2.2:8083/api/expenses', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(expense),
-      });
-
-      if (response.ok) {
-        setValor('');
-        setTipo('alimentacao');
-        setCategoryId(null);
-        Alert.alert('Sucesso', 'Gasto adicionado com sucesso!');
-        onExpenseAdded();
-      } else {
-        const errorData = await response.json();
-        console.error('Erro do servidor:', errorData);
-        Alert.alert('Erro', 'Erro ao adicionar gasto');
-      }
+      await api.post('/expenses', expense);
+      
+      setValor('');
+      setTipo('alimentacao');
+      setCategoryId(null);
+      Alert.alert('Sucesso', 'Gasto adicionado com sucesso!');
+      onExpenseAdded();
     } catch (error) {
       console.error('Erro ao criar gasto:', error);
-      Alert.alert('Erro', 'Não foi possível adicionar o gasto. Verifique se o backend está rodando.');
+      Alert.alert('Erro', 'Não foi possível adicionar o gasto.');
     } finally {
       setLoading(false);
     }

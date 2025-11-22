@@ -41,6 +41,12 @@ class CategoryControllerTest {
     @MockBean
     private CategoryMapper categoryMapper;
 
+    @MockBean
+    private com.expense.security.JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private com.expense.security.UserDetailsServiceImpl userDetailsService;
+
     private Category category;
     private CategoryRequestDTO requestDTO;
     private CategoryResponseDTO responseDTO;

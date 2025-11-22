@@ -7,8 +7,8 @@ INSERT INTO categories (name, description, created_at) VALUES
   ('Transport', 'Transport expenses', NOW()),
   ('Health', 'Health expenses', NOW());
 
-INSERT INTO expense (value, date, category_id, user_id) VALUES
-  (50.00, NOW(), 1, 1),
-  (20.00, NOW(), 2, 2),
-  (100.00, NOW(), 1, 2),
-  (75.50, NOW(), 3, 1);
+INSERT INTO expense (description, amount, date, category_id, user_id) VALUES
+  ('Lunch', 50.00, NOW(), 1, 1),
+  ('Bus ticket', 20.00, NOW(), 2, 2),
+  ('Dinner', 100.00, NOW(), 1, 2),
+  ('Doctor appointment', 75.50, NOW(), 3, 1);

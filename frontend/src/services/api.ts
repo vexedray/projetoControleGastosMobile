@@ -1,4 +1,5 @@
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ==================== TIPOS ====================
 
@@ -45,9 +46,16 @@ const api = axios.create({
   },
 });
 
-// Interceptors para debug
+// Interceptor para adicionar token JWT automaticamente
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
+    // Não adiciona token para rotas de autenticação
+    if (!config.url?.includes('/auth/')) {
+      const token = await AsyncStorage.getItem('@expense_token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
     console.log('Request:', config.method?.toUpperCase(), config.url);
     return config;
   },
@@ -62,7 +70,12 @@ api.interceptors.response.use(
     console.log('Response:', response.status, response.config.url);
     return response;
   },
-  (error) => {
+  async (error) => {
+    // Se receber 401/403, remove token e usuário do storage
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      await AsyncStorage.removeItem('@expense_token');
+      await AsyncStorage.removeItem('@expense_user');
+    }
     console.error('Response Error:', error.response?.status, error.message);
     return Promise.reject(error);
   }

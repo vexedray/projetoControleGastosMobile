@@ -1,6 +1,5 @@
 package com.expense.dto.request;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 /**
@@ -8,11 +7,10 @@ import jakarta.validation.constraints.NotBlank;
  */
 public class LoginRequestDTO {
     
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
+    @NotBlank(message = "Email é obrigatório")
     private String email;
     
-    @NotBlank(message = "Password is required")
+    @NotBlank(message = "Senha é obrigatória")
     private String password;
     
     // Constructors

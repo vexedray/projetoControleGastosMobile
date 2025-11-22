@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '../services/api';
 
 interface User {
   id: number;
@@ -10,7 +11,7 @@ interface User {
 interface AuthContextData {
   user: User | null;
   loading: boolean;
-  login: (user: User) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -31,8 +32,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const loadStoredUser = async () => {
     try {
       const storedUser = await AsyncStorage.getItem('@expense_user');
-      if (storedUser) {
+      const storedToken = await AsyncStorage.getItem('@expense_token');
+      
+      if (storedUser && storedToken) {
         setUser(JSON.parse(storedUser));
+        api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
       }
     } catch (error) {
       console.error('Erro ao carregar usuário:', error);
@@ -41,12 +45,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const login = async (userData: User) => {
+  const login = async (email: string, password: string) => {
     try {
+      const response = await api.post('/auth/login', { email, password });
+      
+      const { token, user: userData } = response.data;
+      
+      await AsyncStorage.setItem('@expense_token', token);
       await AsyncStorage.setItem('@expense_user', JSON.stringify(userData));
+      
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
       setUser(userData);
     } catch (error) {
-      console.error('Erro ao salvar usuário:', error);
+      console.error('Erro ao fazer login:', error);
       throw error;
     }
   };
@@ -54,6 +66,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = async () => {
     try {
       await AsyncStorage.removeItem('@expense_user');
+      await AsyncStorage.removeItem('@expense_token');
+      delete api.defaults.headers.common['Authorization'];
       setUser(null);
     } catch (error) {
       console.error('Erro ao fazer logout:', error);

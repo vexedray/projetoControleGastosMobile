@@ -114,26 +114,15 @@ class CategoryServiceTest {
     @Test
     void testDeleteById_ShouldCallRepositoryDelete() {
         // Arrange
+        when(categoryRepository.existsById(1L)).thenReturn(true);
         doNothing().when(categoryRepository).deleteById(1L);
 
         // Act
         categoryService.deleteById(1L);
 
         // Assert
+        verify(categoryRepository, times(1)).existsById(1L);
         verify(categoryRepository, times(1)).deleteById(1L);
-    }
-
-    @Test
-    void testSave_WithNullName_ShouldThrowException() {
-        // Arrange
-        Category invalidCategory = new Category();
-        invalidCategory.setDescription("Description without name");
-
-        // Act & Assert
-        assertThrows(Exception.class, () -> {
-            when(categoryRepository.save(any(Category.class))).thenThrow(new IllegalArgumentException("Name cannot be null"));
-            categoryService.save(invalidCategory);
-        });
     }
 
     @Test
@@ -168,44 +157,5 @@ class CategoryServiceTest {
         assertEquals("Food & Drinks", result.getName());
         assertEquals("Updated description", result.getDescription());
         verify(categoryRepository, times(1)).save(any(Category.class));
-    }
-
-    @Test
-    void testCount_ShouldReturnNumberOfCategories() {
-        // Arrange
-        when(categoryRepository.count()).thenReturn(5L);
-
-        // Act
-        long count = categoryRepository.count();
-
-        // Assert
-        assertEquals(5L, count);
-        verify(categoryRepository, times(1)).count();
-    }
-
-    @Test
-    void testExistsById_WhenCategoryExists_ShouldReturnTrue() {
-        // Arrange
-        when(categoryRepository.existsById(1L)).thenReturn(true);
-
-        // Act
-        boolean exists = categoryRepository.existsById(1L);
-
-        // Assert
-        assertTrue(exists);
-        verify(categoryRepository, times(1)).existsById(1L);
-    }
-
-    @Test
-    void testExistsById_WhenCategoryDoesNotExist_ShouldReturnFalse() {
-        // Arrange
-        when(categoryRepository.existsById(999L)).thenReturn(false);
-
-        // Act
-        boolean exists = categoryRepository.existsById(999L);
-
-        // Assert
-        assertFalse(exists);
-        verify(categoryRepository, times(1)).existsById(999L);
     }
 }

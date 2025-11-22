@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/expenses")
-@CrossOrigin(origins = "*")
 public class ExpenseController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExpenseController.class);
@@ -68,7 +67,7 @@ public class ExpenseController {
     public ResponseEntity<List<ExpenseResponseDTO>> getExpensesByUser(@PathVariable Long userId) {
         logger.info("GET /api/expenses/user/{} - Fetching user expenses", userId);
         
-        return userService.findById(userId)
+        return userService.getUserById(userId)
                 .map(user -> {
                     List<Expense> expenses = expenseService.findByUserId(userId);
                     List<ExpenseResponseDTO> response = expenses.stream()
@@ -113,7 +112,7 @@ public class ExpenseController {
                         return new RuntimeException("Category not found");
                     });
                     
-            User user = userService.findById(requestDTO.getUserId())
+            User user = userService.getUserById(requestDTO.getUserId())
                     .orElseThrow(() -> {
                         logger.error("User with ID {} not found", requestDTO.getUserId());
                         return new RuntimeException("User not found");
@@ -145,6 +144,7 @@ public class ExpenseController {
             return expenseService.findById(id)
                     .map(existingExpense -> {
                         existingExpense.setAmount(requestDTO.getAmount());
+                        existingExpense.setDescription(requestDTO.getDescription());
                         
                         if (requestDTO.getCategoryId() != null) {
                             Category category = categoryService.findById(requestDTO.getCategoryId())
@@ -172,7 +172,7 @@ public class ExpenseController {
         
         return expenseService.findById(id)
                 .map(expense -> {
-                    expenseService.deleteExpense(id);
+                    expenseService.deleteById(id);
                     logger.info("Expense {} deleted successfully", id);
                     return ResponseEntity.noContent().<Void>build();
                 })

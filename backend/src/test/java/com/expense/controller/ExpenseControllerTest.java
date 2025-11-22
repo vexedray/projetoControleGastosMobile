@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
@@ -53,6 +54,12 @@ class ExpenseControllerTest {
     @MockBean
     private ExpenseMapper expenseMapper;
 
+    @MockBean
+    private com.expense.security.JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private com.expense.security.UserDetailsServiceImpl userDetailsService;
+
     private Expense expense;
     private ExpenseRequestDTO requestDTO;
     private ExpenseResponseDTO responseDTO;
@@ -73,6 +80,7 @@ class ExpenseControllerTest {
         expense = new Expense();
         expense.setId(1L);
         expense.setAmount(new BigDecimal("50.00"));
+        expense.setDescription("Lunch");
         expense.setCategory(category);
         expense.setUser(user);
 
@@ -143,7 +151,7 @@ class ExpenseControllerTest {
         // Arrange
         List<Expense> expenses = Arrays.asList(expense);
 
-        when(userService.findById(1L)).thenReturn(Optional.of(user));
+        when(userService.getUserById(1L)).thenReturn(Optional.of(user));
         when(expenseService.findByUserId(1L)).thenReturn(expenses);
         when(expenseMapper.toResponseDTO(any(Expense.class))).thenReturn(responseDTO);
 
@@ -153,19 +161,21 @@ class ExpenseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1));
 
+        verify(userService, times(1)).getUserById(1L);
         verify(expenseService, times(1)).findByUserId(1L);
     }
 
     @Test
     void getExpensesByUser_WhenUserDoesNotExist_ShouldReturnNotFound() throws Exception {
         // Arrange
-        when(userService.findById(999L)).thenReturn(Optional.empty());
+        when(userService.getUserById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
         mockMvc.perform(get("/api/expenses/user/999")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
+        verify(userService, times(1)).getUserById(999L);
         verify(expenseService, never()).findByUserId(any());
     }
 
@@ -184,6 +194,7 @@ class ExpenseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1));
 
+        verify(categoryService, times(1)).findById(1L);
         verify(expenseService, times(1)).findByCategoryId(1L);
     }
 
@@ -197,6 +208,7 @@ class ExpenseControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
+        verify(categoryService, times(1)).findById(999L);
         verify(expenseService, never()).findByCategoryId(any());
     }
 
@@ -204,7 +216,7 @@ class ExpenseControllerTest {
     void createExpense_WithValidData_ShouldReturnCreatedExpense() throws Exception {
         // Arrange
         when(categoryService.findById(1L)).thenReturn(Optional.of(category));
-        when(userService.findById(1L)).thenReturn(Optional.of(user));
+        when(userService.getUserById(1L)).thenReturn(Optional.of(user));
         when(expenseMapper.toEntity(any(ExpenseRequestDTO.class))).thenReturn(expense);
         when(expenseService.save(any(Expense.class))).thenReturn(expense);
         when(expenseMapper.toResponseDTO(any(Expense.class))).thenReturn(responseDTO);
@@ -217,7 +229,63 @@ class ExpenseControllerTest {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.amount").value(50.00));
 
+        verify(categoryService, times(1)).findById(1L);
+        verify(userService, times(1)).getUserById(1L);
         verify(expenseService, times(1)).save(any(Expense.class));
+    }
+
+    @Test
+    void createExpense_WithInvalidCategoryId_ShouldThrowException() throws Exception {
+        // Arrange
+        when(categoryService.findById(999L)).thenReturn(Optional.empty());
+
+        ExpenseRequestDTO invalidDTO = new ExpenseRequestDTO();
+        invalidDTO.setDescription("Lunch");
+        invalidDTO.setAmount(new BigDecimal("50.00"));
+        invalidDTO.setDate(LocalDate.now());
+        invalidDTO.setCategoryId(999L);
+        invalidDTO.setUserId(1L);
+
+        // Act & Assert - Expect ServletException wrapping RuntimeException
+        try {
+            mockMvc.perform(post("/api/expenses")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(invalidDTO)));
+        } catch (Exception e) {
+            assertTrue(e.getCause() instanceof RuntimeException);
+            assertTrue(e.getCause().getMessage().contains("Category not found"));
+        }
+
+        verify(categoryService, times(1)).findById(999L);
+        verify(expenseService, never()).save(any(Expense.class));
+    }
+
+    @Test
+    void createExpense_WithInvalidUserId_ShouldThrowException() throws Exception {
+        // Arrange
+        when(categoryService.findById(1L)).thenReturn(Optional.of(category));
+        when(userService.getUserById(999L)).thenReturn(Optional.empty());
+
+        ExpenseRequestDTO invalidDTO = new ExpenseRequestDTO();
+        invalidDTO.setDescription("Lunch");
+        invalidDTO.setAmount(new BigDecimal("50.00"));
+        invalidDTO.setDate(LocalDate.now());
+        invalidDTO.setCategoryId(1L);
+        invalidDTO.setUserId(999L);
+
+        // Act & Assert - Expect ServletException wrapping RuntimeException
+        try {
+            mockMvc.perform(post("/api/expenses")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(invalidDTO)));
+        } catch (Exception e) {
+            assertTrue(e.getCause() instanceof RuntimeException);
+            assertTrue(e.getCause().getMessage().contains("User not found"));
+        }
+
+        verify(categoryService, times(1)).findById(1L);
+        verify(userService, times(1)).getUserById(999L);
+        verify(expenseService, never()).save(any(Expense.class));
     }
 
     @Test
@@ -250,6 +318,8 @@ class ExpenseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1));
 
+        verify(expenseService, times(1)).findById(1L);
+        verify(categoryService, times(1)).findById(1L);
         verify(expenseService, times(1)).save(any(Expense.class));
     }
 
@@ -264,6 +334,35 @@ class ExpenseControllerTest {
                 .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isNotFound());
 
+        verify(expenseService, times(1)).findById(999L);
+        verify(expenseService, never()).save(any(Expense.class));
+    }
+
+    @Test
+    void updateExpense_WithInvalidCategoryId_ShouldThrowException() throws Exception {
+        // Arrange
+        when(expenseService.findById(1L)).thenReturn(Optional.of(expense));
+        when(categoryService.findById(999L)).thenReturn(Optional.empty());
+
+        ExpenseRequestDTO updateDTO = new ExpenseRequestDTO();
+        updateDTO.setDescription("Updated Lunch");
+        updateDTO.setAmount(new BigDecimal("75.00"));
+        updateDTO.setDate(LocalDate.now());
+        updateDTO.setCategoryId(999L);
+        updateDTO.setUserId(1L);
+
+        // Act & Assert - Expect ServletException wrapping RuntimeException
+        try {
+            mockMvc.perform(put("/api/expenses/1")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(updateDTO)));
+        } catch (Exception e) {
+            assertTrue(e.getCause() instanceof RuntimeException);
+            assertTrue(e.getCause().getMessage().contains("Category not found"));
+        }
+
+        verify(expenseService, times(1)).findById(1L);
+        verify(categoryService, times(1)).findById(999L);
         verify(expenseService, never()).save(any(Expense.class));
     }
 
@@ -271,14 +370,15 @@ class ExpenseControllerTest {
     void deleteExpense_WhenExpenseExists_ShouldReturnNoContent() throws Exception {
         // Arrange
         when(expenseService.findById(1L)).thenReturn(Optional.of(expense));
-        doNothing().when(expenseService).deleteExpense(1L);
+        doNothing().when(expenseService).deleteById(1L);
 
         // Act & Assert
         mockMvc.perform(delete("/api/expenses/1")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
-        verify(expenseService, times(1)).deleteExpense(1L);
+        verify(expenseService, times(1)).findById(1L);
+        verify(expenseService, times(1)).deleteById(1L);
     }
 
     @Test
@@ -291,6 +391,7 @@ class ExpenseControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
-        verify(expenseService, never()).deleteExpense(anyLong());
+        verify(expenseService, times(1)).findById(999L);
+        verify(expenseService, never()).deleteById(anyLong());
     }
 }

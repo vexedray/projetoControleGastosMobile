@@ -41,6 +41,12 @@ class UserControllerTest {
     @MockBean
     private UserMapper userMapper;
 
+    @MockBean
+    private com.expense.security.JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private com.expense.security.UserDetailsServiceImpl userDetailsService;
+
     private User user;
     private UserRequestDTO requestDTO;
     private UserResponseDTO responseDTO;
@@ -108,14 +114,47 @@ class UserControllerTest {
         // Act & Assert
         mockMvc.perform(get("/api/users/999")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Usuário não encontrado"));
 
         verify(userService, times(1)).getUserById(999L);
     }
 
     @Test
+    void getUserByEmail_WhenUserExists_ShouldReturnUser() throws Exception {
+        // Arrange
+        when(userService.findByEmail("john@example.com")).thenReturn(Optional.of(user));
+        when(userMapper.toResponseDTO(user)).thenReturn(responseDTO);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/users/email/john@example.com")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.name").value("John Doe"))
+                .andExpect(jsonPath("$.email").value("john@example.com"));
+
+        verify(userService, times(1)).findByEmail("john@example.com");
+    }
+
+    @Test
+    void getUserByEmail_WhenUserDoesNotExist_ShouldReturnNotFound() throws Exception {
+        // Arrange
+        when(userService.findByEmail("notfound@example.com")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        mockMvc.perform(get("/api/users/email/notfound@example.com")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Usuário não encontrado"));
+
+        verify(userService, times(1)).findByEmail("notfound@example.com");
+    }
+
+    @Test
     void createUser_WithValidData_ShouldReturnCreatedUser() throws Exception {
         // Arrange
+        when(userService.existsByEmail("john@example.com")).thenReturn(false);
         when(userMapper.toEntity(any(UserRequestDTO.class))).thenReturn(user);
         when(userService.createUser(any(User.class))).thenReturn(user);
         when(userMapper.toResponseDTO(any(User.class))).thenReturn(responseDTO);
@@ -129,7 +168,24 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.name").value("John Doe"))
                 .andExpect(jsonPath("$.email").value("john@example.com"));
 
+        verify(userService, times(1)).existsByEmail("john@example.com");
         verify(userService, times(1)).createUser(any(User.class));
+    }
+
+    @Test
+    void createUser_WithExistingEmail_ShouldReturnBadRequest() throws Exception {
+        // Arrange
+        when(userService.existsByEmail("john@example.com")).thenReturn(true);
+
+        // Act & Assert
+        mockMvc.perform(post("/api/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Email já está em uso"));
+
+        verify(userService, times(1)).existsByEmail("john@example.com");
+        verify(userService, never()).createUser(any(User.class));
     }
 
     @Test
@@ -152,7 +208,8 @@ class UserControllerTest {
     void updateUser_WhenUserExists_ShouldReturnUpdatedUser() throws Exception {
         // Arrange
         when(userService.getUserById(1L)).thenReturn(Optional.of(user));
-        when(userService.updateUser(anyLong(), any(User.class))).thenReturn(Optional.of(user));
+        when(userService.existsByEmail("john@example.com")).thenReturn(false);
+        when(userService.createUser(any(User.class))).thenReturn(user);
         when(userMapper.toResponseDTO(any(User.class))).thenReturn(responseDTO);
 
         // Act & Assert
@@ -163,7 +220,55 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("John Doe"));
 
-        verify(userService, times(1)).updateUser(anyLong(), any(User.class));
+        verify(userService, times(1)).getUserById(1L);
+        verify(userService, times(1)).createUser(any(User.class));
+    }
+
+    @Test
+    void updateUser_WithDifferentEmail_WhenEmailAvailable_ShouldUpdate() throws Exception {
+        // Arrange
+        UserRequestDTO updateDTO = new UserRequestDTO();
+        updateDTO.setName("John Doe");
+        updateDTO.setEmail("newemail@example.com");
+        updateDTO.setPassword("password123");
+
+        when(userService.getUserById(1L)).thenReturn(Optional.of(user));
+        when(userService.existsByEmail("newemail@example.com")).thenReturn(false);
+        when(userService.createUser(any(User.class))).thenReturn(user);
+        when(userMapper.toResponseDTO(any(User.class))).thenReturn(responseDTO);
+
+        // Act & Assert
+        mockMvc.perform(put("/api/users/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isOk());
+
+        verify(userService, times(1)).getUserById(1L);
+        verify(userService, times(1)).existsByEmail("newemail@example.com");
+        verify(userService, times(1)).createUser(any(User.class));
+    }
+
+    @Test
+    void updateUser_WithDifferentEmail_WhenEmailTaken_ShouldReturnBadRequest() throws Exception {
+        // Arrange
+        UserRequestDTO updateDTO = new UserRequestDTO();
+        updateDTO.setName("John Doe");
+        updateDTO.setEmail("taken@example.com");
+        updateDTO.setPassword("password123");
+
+        when(userService.getUserById(1L)).thenReturn(Optional.of(user));
+        when(userService.existsByEmail("taken@example.com")).thenReturn(true);
+
+        // Act & Assert
+        mockMvc.perform(put("/api/users/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Email já está em uso por outro usuário"));
+
+        verify(userService, times(1)).getUserById(1L);
+        verify(userService, times(1)).existsByEmail("taken@example.com");
+        verify(userService, never()).createUser(any(User.class));
     }
 
     @Test
@@ -175,9 +280,11 @@ class UserControllerTest {
         mockMvc.perform(put("/api/users/999")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Usuário não encontrado"));
 
-        verify(userService, never()).updateUser(anyLong(), any(User.class));
+        verify(userService, times(1)).getUserById(999L);
+        verify(userService, never()).createUser(any(User.class));
     }
 
     @Test
@@ -191,6 +298,7 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
+        verify(userService, times(1)).getUserById(1L);
         verify(userService, times(1)).deleteUser(1L);
     }
 
@@ -202,8 +310,10 @@ class UserControllerTest {
         // Act & Assert
         mockMvc.perform(delete("/api/users/999")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Usuário não encontrado"));
 
+        verify(userService, times(1)).getUserById(999L);
         verify(userService, never()).deleteUser(anyLong());
     }
 
