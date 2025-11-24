@@ -7,6 +7,7 @@ public class LoginResponseDTO {
     
     private String token;
     private String type = "Bearer";
+    private Long userId;
     private String email;
     private String name;
     
@@ -14,8 +15,9 @@ public class LoginResponseDTO {
     public LoginResponseDTO() {
     }
     
-    public LoginResponseDTO(String token, String email, String name) {
+    public LoginResponseDTO(String token, Long userId, String email, String name) {
         this.token = token;
+        this.userId = userId;
         this.email = email;
         this.name = name;
     }
@@ -51,5 +53,13 @@ public class LoginResponseDTO {
     
     public void setName(String name) {
         this.name = name;
+    }
+    
+    public Long getUserId() {
+        return userId;
+    }
+    
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 }

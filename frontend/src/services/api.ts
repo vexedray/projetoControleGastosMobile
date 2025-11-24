@@ -49,14 +49,12 @@ const api = axios.create({
 // Interceptor para adicionar token JWT automaticamente
 api.interceptors.request.use(
   async (config) => {
-    // Não adiciona token para rotas de autenticação
-    if (!config.url?.includes('/auth/')) {
-      const token = await AsyncStorage.getItem('@expense_token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+    const token = await AsyncStorage.getItem('@expense_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     console.log('Request:', config.method?.toUpperCase(), config.url);
+    console.log('Token presente:', !!token);
     return config;
   },
   (error) => {

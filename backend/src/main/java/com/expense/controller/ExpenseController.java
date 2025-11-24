@@ -106,15 +106,23 @@ public class ExpenseController {
         logger.info("POST /api/expenses - Creating new expense");
         
         try {
+            // Buscar categoria
             Category category = categoryService.findById(requestDTO.getCategoryId())
                     .orElseThrow(() -> {
                         logger.error("Category with ID {} not found", requestDTO.getCategoryId());
                         return new RuntimeException("Category not found");
                     });
-                    
-            User user = userService.getUserById(requestDTO.getUserId())
+            
+            // Buscar usuário - se userId não foi fornecido, usa o do requestDTO
+            Long userId = requestDTO.getUserId();
+            if (userId == null) {
+                logger.warn("UserId not provided in request, this should not happen");
+                throw new RuntimeException("User ID is required");
+            }
+            
+            User user = userService.getUserById(userId)
                     .orElseThrow(() -> {
-                        logger.error("User with ID {} not found", requestDTO.getUserId());
+                        logger.error("User with ID {} not found", userId);
                         return new RuntimeException("User not found");
                     });
 
@@ -124,7 +132,12 @@ public class ExpenseController {
             
             Expense savedExpense = expenseService.save(expense);
             
-            logger.info("Expense created with ID: {} - value: {}", savedExpense.getId(), requestDTO.getAmount());
+            logger.info("Expense created with ID: {} - amount: {} - category: {} - user: {}", 
+                savedExpense.getId(), 
+                requestDTO.getAmount(), 
+                category.getName(),
+                user.getEmail());
+            
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(expenseMapper.toResponseDTO(savedExpense));
             

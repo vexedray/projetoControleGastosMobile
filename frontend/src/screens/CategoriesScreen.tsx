@@ -33,7 +33,7 @@ export default function CategoriesScreen() {
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get<Category[]>('/api/categories');
+      const response = await api.get<Category[]>('/categories');
       setCategories(response.data);
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
@@ -50,14 +50,14 @@ export default function CategoriesScreen() {
     setLoading(true);
     try {
       if (editingId) {
-        await api.put(`/api/categories/${editingId}`, {
+        await api.put(`/categories/${editingId}`, {
           name: name.trim(),
           description: description.trim() || undefined,
         });
         Alert.alert('Sucesso', 'Categoria atualizada!');
         setEditingId(null);
       } else {
-        await api.post('/api/categories', {
+        await api.post('/categories', {
           name: name.trim(),
           description: description.trim() || undefined,
         });
@@ -104,7 +104,7 @@ export default function CategoriesScreen() {
           onPress: async () => {
             try {
               console.log('Excluindo categoria ID:', id);
-              await api.delete(`/api/categories/${id}`);
+              await api.delete(`/categories/${id}`);
               Alert.alert('Sucesso', 'Categoria excluída!');
               fetchCategories();
             } catch (error) {

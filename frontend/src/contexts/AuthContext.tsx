@@ -49,14 +49,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const response = await api.post('/auth/login', { email, password });
       
-      const { token, email: userEmail, name } = response.data;
+      const { token, userId, email: userEmail, name } = response.data;
       
       if (!token || !userEmail || !name) {
         throw new Error('Dados de autenticação inválidos na resposta');
       }
       
       const userData = {
-        id: 0, 
+        id: userId || 0, 
         email: userEmail,
         name: name
       };
@@ -64,7 +64,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await AsyncStorage.setItem('@expense_token', token);
       await AsyncStorage.setItem('@expense_user', JSON.stringify(userData));
       
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      console.log('Token salvo com sucesso:', token.substring(0, 20) + '...');
+      console.log('User ID:', userId);
       
       setUser(userData);
     } catch (error) {

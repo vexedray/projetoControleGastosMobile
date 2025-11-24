@@ -58,8 +58,10 @@ public class AuthController {
             User user = userService.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
             
+            System.out.println("User found - ID: " + user.getId() + ", Email: " + user.getEmail());
+            
             // Retorna a resposta com o token
-            LoginResponseDTO response = new LoginResponseDTO(jwt, user.getEmail(), user.getName());
+            LoginResponseDTO response = new LoginResponseDTO(jwt, user.getId(), user.getEmail(), user.getName());
             return ResponseEntity.ok(response);
             
         } catch (AuthenticationException e) {
