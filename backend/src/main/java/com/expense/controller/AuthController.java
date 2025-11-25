@@ -2,8 +2,8 @@ package com.expense.controller;
 
 import com.expense.dto.request.LoginRequestDTO;
 import com.expense.dto.request.UserRequestDTO;
-import com.expense.dto.response.LoginResponseDTO;
 import com.expense.model.User;
+import com.expense.model.hateoas.LoginResponseModel;
 import com.expense.security.JwtTokenProvider;
 import com.expense.service.UserService;
 import jakarta.validation.Valid;
@@ -17,6 +17,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -60,8 +62,15 @@ public class AuthController {
             
             System.out.println("User found - ID: " + user.getId() + ", Email: " + user.getEmail());
             
-            // Retorna a resposta com o token
-            LoginResponseDTO response = new LoginResponseDTO(jwt, user.getId(), user.getEmail(), user.getName());
+            // Cria o modelo HATEOAS
+            LoginResponseModel response = new LoginResponseModel(jwt, user.getId(), user.getEmail(), user.getName());
+            
+            // Adiciona links HATEOAS
+            response.add(linkTo(methodOn(UserController.class).getUserById(user.getId())).withRel("user"));
+            response.add(linkTo(methodOn(UserController.class).getAllUsers()).withRel("users"));
+            response.add(linkTo(methodOn(ExpenseController.class).getExpensesByUser(user.getId())).withRel("expenses"));
+            response.add(linkTo(methodOn(CategoryController.class).getAllCategories()).withRel("categories"));
+            
             return ResponseEntity.ok(response);
             
         } catch (AuthenticationException e) {
@@ -82,8 +91,16 @@ public class AuthController {
     public ResponseEntity<?> register(@Valid @RequestBody UserRequestDTO userRequest) {
         try {
             User user = userService.createUser(userRequest);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of("message", "Usuário criado com sucesso", "userId", user.getId()));
+            
+            // Cria resposta com links HATEOAS
+            LoginResponseModel response = new LoginResponseModel(null, user.getId(), user.getEmail(), user.getName());
+            
+            // Adiciona links HATEOAS
+            response.add(linkTo(methodOn(UserController.class).getUserById(user.getId())).withRel("user"));
+            response.add(linkTo(methodOn(AuthController.class).login(null)).withRel("login"));
+            response.add(linkTo(methodOn(UserController.class).getAllUsers()).withRel("users"));
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("error", e.getMessage()));

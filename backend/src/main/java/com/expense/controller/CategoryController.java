@@ -1,11 +1,14 @@
 package com.expense.controller;
 
+import com.expense.assembler.CategoryModelAssembler;
 import com.expense.dto.request.CategoryRequestDTO;
 import com.expense.dto.response.CategoryResponseDTO;
 import com.expense.mapper.CategoryMapper;
 import com.expense.model.Category;
+import com.expense.model.hateoas.CategoryModel;
 import com.expense.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +18,8 @@ import org.slf4j.LoggerFactory;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
 @RequestMapping("/api/categories")
@@ -28,24 +33,40 @@ public class CategoryController {
     @Autowired
     private CategoryMapper categoryMapper;
     
+    @Autowired
+    private CategoryModelAssembler categoryModelAssembler;
+    
     @GetMapping
-    public ResponseEntity<List<CategoryResponseDTO>> getAllCategories() {
+    public ResponseEntity<CollectionModel<CategoryModel>> getAllCategories() {
         logger.info("GET /api/categories - Fetching all categories");
         List<Category> categories = categoryService.findAll();
-        List<CategoryResponseDTO> response = categories.stream()
+        List<CategoryResponseDTO> categoriesDTO = categories.stream()
                 .map(categoryMapper::toResponseDTO)
                 .collect(Collectors.toList());
+        
+        // Converte para HATEOAS models
+        CollectionModel<CategoryModel> categoryModels = CollectionModel.of(
+            categoriesDTO.stream()
+                .map(categoryModelAssembler::toModel)
+                .collect(Collectors.toList())
+        );
+        
+        // Adiciona link para a própria coleção
+        categoryModels.add(linkTo(methodOn(CategoryController.class).getAllCategories()).withSelfRel());
+        
         logger.info("Found {} categories", categories.size());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(categoryModels);
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<CategoryResponseDTO> getCategoryById(@PathVariable Long id) {
+    public ResponseEntity<CategoryModel> getCategoryById(@PathVariable Long id) {
         logger.info("GET /api/categories/{} - Fetching category by ID", id);
         return categoryService.findById(id)
                 .map(category -> {
                     logger.info("Category found: {}", category.getName());
-                    return ResponseEntity.ok(categoryMapper.toResponseDTO(category));
+                    CategoryResponseDTO dto = categoryMapper.toResponseDTO(category);
+                    CategoryModel model = categoryModelAssembler.toModel(dto);
+                    return ResponseEntity.ok(model);
                 })
                 .orElseGet(() -> {
                     logger.warn("Category with ID {} not found", id);
@@ -54,17 +75,18 @@ public class CategoryController {
     }
     
     @PostMapping
-    public ResponseEntity<CategoryResponseDTO> createCategory(@Valid @RequestBody CategoryRequestDTO requestDTO) {
+    public ResponseEntity<CategoryModel> createCategory(@Valid @RequestBody CategoryRequestDTO requestDTO) {
         logger.info("POST /api/categories - Creating category: {}", requestDTO.getName());
         Category category = categoryMapper.toEntity(requestDTO);
         Category savedCategory = categoryService.save(category);
+        CategoryResponseDTO dto = categoryMapper.toResponseDTO(savedCategory);
+        CategoryModel model = categoryModelAssembler.toModel(dto);
         logger.info("Category created with ID: {}", savedCategory.getId());
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(categoryMapper.toResponseDTO(savedCategory));
+        return ResponseEntity.status(HttpStatus.CREATED).body(model);
     }
     
     @PutMapping("/{id}")
-    public ResponseEntity<CategoryResponseDTO> updateCategory(
+    public ResponseEntity<CategoryModel> updateCategory(
             @PathVariable Long id, 
             @Valid @RequestBody CategoryRequestDTO requestDTO) {
         logger.info("PUT /api/categories/{} - Updating category", id);
@@ -76,8 +98,10 @@ public class CategoryController {
                     existingCategory.setColor(requestDTO.getColor());
                     existingCategory.setIcon(requestDTO.getIcon());
                     Category updated = categoryService.save(existingCategory);
+                    CategoryResponseDTO dto = categoryMapper.toResponseDTO(updated);
+                    CategoryModel model = categoryModelAssembler.toModel(dto);
                     logger.info("Category {} updated successfully", id);
-                    return ResponseEntity.ok(categoryMapper.toResponseDTO(updated));
+                    return ResponseEntity.ok(model);
                 })
                 .orElseGet(() -> {
                     logger.warn("Category with ID {} not found for update", id);

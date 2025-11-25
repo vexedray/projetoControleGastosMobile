@@ -1,15 +1,18 @@
 package com.expense.controller;
 
+import com.expense.assembler.ExpenseModelAssembler;
 import com.expense.dto.request.ExpenseRequestDTO;
 import com.expense.dto.response.ExpenseResponseDTO;
 import com.expense.mapper.ExpenseMapper;
 import com.expense.model.Expense;
 import com.expense.model.Category;
 import com.expense.model.User;
+import com.expense.model.hateoas.ExpenseModel;
 import com.expense.service.ExpenseService;
 import com.expense.service.CategoryService;
 import com.expense.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +22,8 @@ import org.slf4j.LoggerFactory;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
 @RequestMapping("/api/expenses")
@@ -37,25 +42,41 @@ public class ExpenseController {
 
     @Autowired
     private ExpenseMapper expenseMapper;
+    
+    @Autowired
+    private ExpenseModelAssembler expenseModelAssembler;
 
     @GetMapping
-    public ResponseEntity<List<ExpenseResponseDTO>> getAllExpenses() {
+    public ResponseEntity<CollectionModel<ExpenseModel>> getAllExpenses() {
         logger.info("GET /api/expenses - Fetching all expenses");
         List<Expense> expenses = expenseService.findAll();
-        List<ExpenseResponseDTO> response = expenses.stream()
+        List<ExpenseResponseDTO> expensesDTO = expenses.stream()
                 .map(expenseMapper::toResponseDTO)
                 .collect(Collectors.toList());
+        
+        // Converte para HATEOAS models
+        CollectionModel<ExpenseModel> expenseModels = CollectionModel.of(
+            expensesDTO.stream()
+                .map(expenseModelAssembler::toModel)
+                .collect(Collectors.toList())
+        );
+        
+        // Adiciona link para a própria coleção
+        expenseModels.add(linkTo(methodOn(ExpenseController.class).getAllExpenses()).withSelfRel());
+        
         logger.info("Found {} expenses", expenses.size());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(expenseModels);
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<ExpenseResponseDTO> getExpenseById(@PathVariable Long id) {
+    public ResponseEntity<ExpenseModel> getExpenseById(@PathVariable Long id) {
         logger.info("GET /api/expenses/{} - Fetching expense by ID", id);
         return expenseService.findById(id)
                 .map(expense -> {
                     logger.info("Expense found: amount={}", expense.getAmount());
-                    return ResponseEntity.ok(expenseMapper.toResponseDTO(expense));
+                    ExpenseResponseDTO dto = expenseMapper.toResponseDTO(expense);
+                    ExpenseModel model = expenseModelAssembler.toModel(dto);
+                    return ResponseEntity.ok(model);
                 })
                 .orElseGet(() -> {
                     logger.warn("Expense with ID {} not found", id);
@@ -64,17 +85,30 @@ public class ExpenseController {
     }
     
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ExpenseResponseDTO>> getExpensesByUser(@PathVariable Long userId) {
+    public ResponseEntity<CollectionModel<ExpenseModel>> getExpensesByUser(@PathVariable Long userId) {
         logger.info("GET /api/expenses/user/{} - Fetching user expenses", userId);
         
         return userService.getUserById(userId)
                 .map(user -> {
                     List<Expense> expenses = expenseService.findByUserId(userId);
-                    List<ExpenseResponseDTO> response = expenses.stream()
+                    List<ExpenseResponseDTO> expensesDTO = expenses.stream()
                             .map(expenseMapper::toResponseDTO)
                             .collect(Collectors.toList());
+                    
+                    // Converte para HATEOAS models
+                    CollectionModel<ExpenseModel> expenseModels = CollectionModel.of(
+                        expensesDTO.stream()
+                            .map(expenseModelAssembler::toModel)
+                            .collect(Collectors.toList())
+                    );
+                    
+                    // Adiciona links
+                    expenseModels.add(linkTo(methodOn(ExpenseController.class).getExpensesByUser(userId)).withSelfRel());
+                    expenseModels.add(linkTo(methodOn(UserController.class).getUserById(userId)).withRel("user"));
+                    expenseModels.add(linkTo(methodOn(ExpenseController.class).getAllExpenses()).withRel("all-expenses"));
+                    
                     logger.info("Found {} expenses for user {}", expenses.size(), userId);
-                    return ResponseEntity.ok(response);
+                    return ResponseEntity.ok(expenseModels);
                 })
                 .orElseGet(() -> {
                     logger.warn("User with ID {} not found", userId);
@@ -83,17 +117,30 @@ public class ExpenseController {
     }
     
     @GetMapping("/category/{categoryId}")
-    public ResponseEntity<List<ExpenseResponseDTO>> getExpensesByCategory(@PathVariable Long categoryId) {
+    public ResponseEntity<CollectionModel<ExpenseModel>> getExpensesByCategory(@PathVariable Long categoryId) {
         logger.info("GET /api/expenses/category/{} - Fetching category expenses", categoryId);
         
         return categoryService.findById(categoryId)
                 .map(category -> {
                     List<Expense> expenses = expenseService.findByCategoryId(categoryId);
-                    List<ExpenseResponseDTO> response = expenses.stream()
+                    List<ExpenseResponseDTO> expensesDTO = expenses.stream()
                             .map(expenseMapper::toResponseDTO)
                             .collect(Collectors.toList());
+                    
+                    // Converte para HATEOAS models
+                    CollectionModel<ExpenseModel> expenseModels = CollectionModel.of(
+                        expensesDTO.stream()
+                            .map(expenseModelAssembler::toModel)
+                            .collect(Collectors.toList())
+                    );
+                    
+                    // Adiciona links
+                    expenseModels.add(linkTo(methodOn(ExpenseController.class).getExpensesByCategory(categoryId)).withSelfRel());
+                    expenseModels.add(linkTo(methodOn(CategoryController.class).getCategoryById(categoryId)).withRel("category"));
+                    expenseModels.add(linkTo(methodOn(ExpenseController.class).getAllExpenses()).withRel("all-expenses"));
+                    
                     logger.info("Found {} expenses for category {}", expenses.size(), categoryId);
-                    return ResponseEntity.ok(response);
+                    return ResponseEntity.ok(expenseModels);
                 })
                 .orElseGet(() -> {
                     logger.warn("Category with ID {} not found", categoryId);
@@ -102,7 +149,7 @@ public class ExpenseController {
     }
     
     @PostMapping
-    public ResponseEntity<ExpenseResponseDTO> createExpense(@Valid @RequestBody ExpenseRequestDTO requestDTO) {
+    public ResponseEntity<ExpenseModel> createExpense(@Valid @RequestBody ExpenseRequestDTO requestDTO) {
         logger.info("POST /api/expenses - Creating new expense");
         
         try {
@@ -131,6 +178,8 @@ public class ExpenseController {
             expense.setUser(user);
             
             Expense savedExpense = expenseService.save(expense);
+            ExpenseResponseDTO dto = expenseMapper.toResponseDTO(savedExpense);
+            ExpenseModel model = expenseModelAssembler.toModel(dto);
             
             logger.info("Expense created with ID: {} - amount: {} - category: {} - user: {}", 
                 savedExpense.getId(), 
@@ -138,8 +187,7 @@ public class ExpenseController {
                 category.getName(),
                 user.getEmail());
             
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(expenseMapper.toResponseDTO(savedExpense));
+            return ResponseEntity.status(HttpStatus.CREATED).body(model);
             
         } catch (RuntimeException e) {
             logger.error("Error creating expense: {}", e.getMessage());
@@ -148,7 +196,7 @@ public class ExpenseController {
     }
     
     @PutMapping("/{id}")
-    public ResponseEntity<ExpenseResponseDTO> updateExpense(
+    public ResponseEntity<ExpenseModel> updateExpense(
             @PathVariable Long id,
             @Valid @RequestBody ExpenseRequestDTO requestDTO) {
         logger.info("PUT /api/expenses/{} - Updating expense", id);
@@ -166,8 +214,10 @@ public class ExpenseController {
                         }
                         
                         Expense updated = expenseService.save(existingExpense);
+                        ExpenseResponseDTO dto = expenseMapper.toResponseDTO(updated);
+                        ExpenseModel model = expenseModelAssembler.toModel(dto);
                         logger.info("Expense {} updated successfully", id);
-                        return ResponseEntity.ok(expenseMapper.toResponseDTO(updated));
+                        return ResponseEntity.ok(model);
                     })
                     .orElseGet(() -> {
                         logger.warn("Expense with ID {} not found for update", id);

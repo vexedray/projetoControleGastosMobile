@@ -1,22 +1,27 @@
 package com.expense.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.expense.assembler.UserModelAssembler;
 import com.expense.dto.request.UserRequestDTO;
 import com.expense.dto.response.UserResponseDTO;
 import com.expense.mapper.UserMapper;
 import com.expense.model.User;
+import com.expense.model.hateoas.UserModel;
 import com.expense.service.UserService;
 
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
 @RequestMapping("/api/users")
@@ -29,16 +34,30 @@ public class UserController {
     
     @Autowired
     private UserMapper userMapper;
+    
+    @Autowired
+    private UserModelAssembler userModelAssembler;
 
     @GetMapping
-    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
+    public ResponseEntity<CollectionModel<UserModel>> getAllUsers() {
         logger.info("GET /api/users - Fetching all users");
         List<User> users = userService.getAllUsers();
         List<UserResponseDTO> usersDTO = users.stream()
                 .map(userMapper::toResponseDTO)
                 .collect(Collectors.toList());
+        
+        // Converte para HATEOAS models
+        CollectionModel<UserModel> userModels = CollectionModel.of(
+            usersDTO.stream()
+                .map(userModelAssembler::toModel)
+                .collect(Collectors.toList())
+        );
+        
+        // Adiciona link para a própria coleção
+        userModels.add(linkTo(methodOn(UserController.class).getAllUsers()).withSelfRel());
+        
         logger.info("Found {} users", usersDTO.size());
-        return ResponseEntity.ok(usersDTO);
+        return ResponseEntity.ok(userModels);
     }
 
     @GetMapping("/{id}")
@@ -47,7 +66,9 @@ public class UserController {
         return userService.getUserById(id)
                 .map(user -> {
                     logger.info("User found: {}", user.getName());
-                    return ResponseEntity.ok((Object) userMapper.toResponseDTO(user));
+                    UserResponseDTO dto = userMapper.toResponseDTO(user);
+                    UserModel model = userModelAssembler.toModel(dto);
+                    return ResponseEntity.ok((Object) model);
                 })
                 .orElseGet(() -> {
                     logger.warn("User with ID {} not found", id);
@@ -62,7 +83,9 @@ public class UserController {
         return userService.findByEmail(email)
                 .map(user -> {
                     logger.info("User found: {}", user.getName());
-                    return ResponseEntity.ok((Object) userMapper.toResponseDTO(user));
+                    UserResponseDTO dto = userMapper.toResponseDTO(user);
+                    UserModel model = userModelAssembler.toModel(dto);
+                    return ResponseEntity.ok((Object) model);
                 })
                 .orElseGet(() -> {
                     logger.warn("User with email {} not found", email);
@@ -86,8 +109,10 @@ public class UserController {
             User user = userMapper.toEntity(userRequestDTO);
             User createdUser = userService.createUser(user);
             UserResponseDTO responseDTO = userMapper.toResponseDTO(createdUser);
+            UserModel model = userModelAssembler.toModel(responseDTO);
+            
             logger.info("User created with ID: {}", createdUser.getId());
-            return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(model);
             
         } catch (Exception e) {
             logger.error("Error creating user: {}", e.getMessage());
@@ -121,8 +146,10 @@ public class UserController {
                         
                         User updatedUser = userService.createUser(existingUser);
                         UserResponseDTO responseDTO = userMapper.toResponseDTO(updatedUser);
+                        UserModel model = userModelAssembler.toModel(responseDTO);
+                        
                         logger.info("User {} updated successfully", id);
-                        return ResponseEntity.ok((Object) responseDTO);
+                        return ResponseEntity.ok((Object) model);
                     })
                     .orElseGet(() -> {
                         logger.warn("User with ID {} not found for update", id);
