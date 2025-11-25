@@ -28,6 +28,48 @@ interface Category {
   color?: string;
 }
 
+// Helper para extrair dados HATEOAS
+const extractHateoasData = <T,>(response: any): T[] => {
+  const cleanItem = (obj: any): any => {
+    if (Array.isArray(obj)) return obj.map(cleanItem);
+    if (obj && typeof obj === 'object') {
+      const { _links, ...rest } = obj;
+      const cleaned: any = {};
+      for (const key in rest) {
+        cleaned[key] = cleanItem(rest[key]);
+      }
+      return cleaned;
+    }
+    return obj;
+  };
+
+  if (Array.isArray(response)) return response.map(cleanItem);
+  if (response._embedded) {
+    const firstKey = Object.keys(response._embedded)[0];
+    if (firstKey && Array.isArray(response._embedded[firstKey])) {
+      return response._embedded[firstKey].map(cleanItem);
+    }
+  }
+  if (response.content && Array.isArray(response.content)) return response.content.map(cleanItem);
+  return [];
+};
+
+const extractHateoasItem = <T,>(response: any): T => {
+  const cleanItem = (obj: any): any => {
+    if (Array.isArray(obj)) return obj.map(cleanItem);
+    if (obj && typeof obj === 'object') {
+      const { _links, ...rest } = obj;
+      const cleaned: any = {};
+      for (const key in rest) {
+        cleaned[key] = cleanItem(rest[key]);
+      }
+      return cleaned;
+    }
+    return obj;
+  };
+  return cleanItem(response);
+};
+
 export default function HomeScreen({ navigation }: any) {
   const { user } = useAuth();
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -54,6 +96,8 @@ export default function HomeScreen({ navigation }: any) {
   const fetchExpenses = async () => {
     try {
       const data = await expenseApi.getAll();
+      console.log('Expenses carregadas:', data);
+      console.log('Primeira expense:', data[0]);
       setExpenses(data);
     } catch (error) {
       console.error('Erro ao buscar gastos:', error);
@@ -64,10 +108,11 @@ export default function HomeScreen({ navigation }: any) {
     try {
       setLoadingCategories(true);
       const response = await api.get('/categories');
-      setCategories(response.data);
+      const categoriesData = extractHateoasData<Category>(response.data);
+      setCategories(categoriesData);
       
-      if (response.data.length > 0 && !categoryId) {
-        setCategoryId(response.data[0].id);
+      if (categoriesData.length > 0 && !categoryId) {
+        setCategoryId(categoriesData[0].id);
       }
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
@@ -129,11 +174,11 @@ export default function HomeScreen({ navigation }: any) {
         date: formatDate(date),
       };
 
-      await api.post('/expenses', expenseData);
-      
-      Alert.alert('Sucesso', 'Gasto cadastrado com sucesso!');
-      
-      // Limpar formulário
+    const response = await api.post('/expenses', expenseData);
+    const createdExpense = extractHateoasItem(response.data);
+    console.log('Expense criado:', createdExpense);
+    
+    Alert.alert('Sucesso', 'Gasto cadastrado com sucesso!');      // Limpar formulário
       setAmount('');
       setDescription('');
       setDate(new Date());

@@ -21,6 +21,28 @@ interface Category {
   totalExpenses?: number;
 }
 
+// Helper para extrair dados HATEOAS
+const extractHateoasData = <T,>(response: any): T[] => {
+  if (Array.isArray(response)) return response;
+  if (response._embedded) {
+    const firstKey = Object.keys(response._embedded)[0];
+    if (firstKey && Array.isArray(response._embedded[firstKey])) {
+      return response._embedded[firstKey].map((item: any) => {
+        const { _links, ...data } = item;
+        return data;
+      });
+    }
+  }
+  if (response.content && Array.isArray(response.content)) return response.content;
+  return [];
+};
+
+const extractHateoasItem = <T,>(response: any): T => {
+  if (!response || typeof response !== 'object') return response;
+  const { _links, ...data } = response;
+  return data as T;
+};
+
 export default function CategoriesScreen() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [name, setName] = useState('');
@@ -46,8 +68,9 @@ export default function CategoriesScreen() {
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get<Category[]>('/categories');
-      setCategories(response.data);
+      const response = await api.get('/categories');
+      const categoriesData = extractHateoasData<Category>(response.data);
+      setCategories(categoriesData);
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
       Alert.alert('Erro', 'Não foi possível carregar as categorias');
@@ -63,19 +86,23 @@ export default function CategoriesScreen() {
     setLoading(true);
     try {
       if (editingId) {
-        await api.put(`/categories/${editingId}`, {
+        const response = await api.put(`/categories/${editingId}`, {
           name: name.trim(),
           description: description.trim() || undefined,
           color: selectedColor,
         });
+        const updatedCategory = extractHateoasItem<Category>(response.data);
+        console.log('Categoria atualizada:', updatedCategory);
         Alert.alert('Sucesso', 'Categoria atualizada!');
         setEditingId(null);
       } else {
-        await api.post('/categories', {
+        const response = await api.post('/categories', {
           name: name.trim(),
           description: description.trim() || undefined,
           color: selectedColor,
         });
+        const newCategory = extractHateoasItem<Category>(response.data);
+        console.log('Categoria criada:', newCategory);
         Alert.alert('Sucesso', 'Categoria criada!');
       }
       

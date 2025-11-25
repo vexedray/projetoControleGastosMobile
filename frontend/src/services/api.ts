@@ -1,6 +1,49 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// ==================== HELPERS HATEOAS ====================
+
+const extractHateoasData = <T,>(response: any): T[] => {
+  const cleanItem = (obj: any): any => {
+    if (Array.isArray(obj)) return obj.map(cleanItem);
+    if (obj && typeof obj === 'object') {
+      const { _links, ...rest } = obj;
+      const cleaned: any = {};
+      for (const key in rest) {
+        cleaned[key] = cleanItem(rest[key]);
+      }
+      return cleaned;
+    }
+    return obj;
+  };
+
+  if (Array.isArray(response)) return response.map(cleanItem);
+  if (response._embedded) {
+    const firstKey = Object.keys(response._embedded)[0];
+    if (firstKey && Array.isArray(response._embedded[firstKey])) {
+      return response._embedded[firstKey].map(cleanItem);
+    }
+  }
+  if (response.content && Array.isArray(response.content)) return response.content.map(cleanItem);
+  return [];
+};
+
+const extractHateoasItem = <T,>(response: any): T => {
+  const cleanItem = (obj: any): any => {
+    if (Array.isArray(obj)) return obj.map(cleanItem);
+    if (obj && typeof obj === 'object') {
+      const { _links, ...rest } = obj;
+      const cleaned: any = {};
+      for (const key in rest) {
+        cleaned[key] = cleanItem(rest[key]);
+      }
+      return cleaned;
+    }
+    return obj;
+  };
+  return cleanItem(response);
+};
+
 // ==================== TIPOS ====================
 
 export interface User {
@@ -84,17 +127,17 @@ api.interceptors.response.use(
 export const userApi = {
   getAll: async (): Promise<User[]> => {
     const response = await api.get('/users');
-    return response.data;
+    return extractHateoasData<User>(response.data);
   },
 
   getById: async (id: number): Promise<User> => {
     const response = await api.get(`/users/${id}`);
-    return response.data;
+    return extractHateoasItem<User>(response.data);
   },
 
   getByEmail: async (email: string): Promise<User> => {
     const response = await api.get(`/users/email/${email}`);
-    return response.data;
+    return extractHateoasItem<User>(response.data);
   },
 
   checkEmail: async (email: string): Promise<{ available: boolean }> => {
@@ -104,12 +147,12 @@ export const userApi = {
 
   create: async (user: Omit<User, 'id' | 'createdAt'>): Promise<User> => {
     const response = await api.post('/users', user);
-    return response.data;
+    return extractHateoasItem<User>(response.data);
   },
 
   update: async (id: number, user: Partial<User>): Promise<User> => {
     const response = await api.put(`/users/${id}`, user);
-    return response.data;
+    return extractHateoasItem<User>(response.data);
   },
 
   delete: async (id: number): Promise<void> => {
@@ -122,22 +165,22 @@ export const userApi = {
 export const categoryApi = {
   getAll: async (): Promise<Category[]> => {
     const response = await api.get('/categories');
-    return response.data;
+    return extractHateoasData<Category>(response.data);
   },
 
   getById: async (id: number): Promise<Category> => {
     const response = await api.get(`/categories/${id}`);
-    return response.data;
+    return extractHateoasItem<Category>(response.data);
   },
 
   create: async (category: Omit<Category, 'id' | 'createdAt'>): Promise<Category> => {
     const response = await api.post('/categories', category);
-    return response.data;
+    return extractHateoasItem<Category>(response.data);
   },
 
   update: async (id: number, category: Partial<Category>): Promise<Category> => {
     const response = await api.put(`/categories/${id}`, category);
-    return response.data;
+    return extractHateoasItem<Category>(response.data);
   },
 
   delete: async (id: number): Promise<void> => {
@@ -150,32 +193,32 @@ export const categoryApi = {
 export const expenseApi = {
   getAll: async (): Promise<Expense[]> => {
     const response = await api.get('/expenses');
-    return response.data;
+    return extractHateoasData<Expense>(response.data);
   },
 
   getById: async (id: number): Promise<Expense> => {
     const response = await api.get(`/expenses/${id}`);
-    return response.data;
+    return extractHateoasItem<Expense>(response.data);
   },
 
   getByUser: async (userId: number): Promise<Expense[]> => {
     const response = await api.get(`/expenses/user/${userId}`);
-    return response.data;
+    return extractHateoasData<Expense>(response.data);
   },
 
   getByCategory: async (categoryId: number): Promise<Expense[]> => {
     const response = await api.get(`/expenses/category/${categoryId}`);
-    return response.data;
+    return extractHateoasData<Expense>(response.data);
   },
 
   create: async (expense: Omit<Expense, 'id'>): Promise<Expense> => {
     const response = await api.post('/expenses', expense);
-    return response.data;
+    return extractHateoasItem<Expense>(response.data);
   },
 
   update: async (id: number, expense: Partial<Expense>): Promise<Expense> => {
     const response = await api.put(`/expenses/${id}`, expense);
-    return response.data;
+    return extractHateoasItem<Expense>(response.data);
   },
 
   delete: async (id: number): Promise<void> => {

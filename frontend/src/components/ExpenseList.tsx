@@ -46,34 +46,38 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
     return date.toLocaleDateString('pt-BR');
   };
 
-  const renderItem = ({ item }: { item: Expense }) => (
-    <View style={styles.item}>
-      <View style={styles.itemContent}>
-        <Text style={styles.description} numberOfLines={1}>
-          {item.description}
-        </Text>
-        <View style={styles.categoryContainer}>
-          <Feather name="tag" size={12} color="#3B82F6" />
-          <Text style={styles.category}>
-            {item.category?.name || 'Sem categoria'}
+  const renderItem = ({ item }: { item: Expense }) => {
+    const categoryName = (item as any).categoryName || item.category?.name || 'Sem categoria';
+    
+    return (
+      <View style={styles.item}>
+        <View style={styles.itemContent}>
+          <Text style={styles.description} numberOfLines={1}>
+            {item.description}
           </Text>
+          <View style={styles.categoryContainer}>
+            <Feather name="tag" size={12} color="#3B82F6" />
+            <Text style={styles.category}>
+              {categoryName}
+            </Text>
+          </View>
+          <Text style={styles.value}>R$ {item.amount.toFixed(2)}</Text>
+          <View style={styles.dateContainer}>
+            <Feather name="calendar" size={12} color="#6B7280" />
+            <Text style={styles.date}>
+              {new Date(item.date).toLocaleDateString('pt-BR')}
+            </Text>
+          </View>
         </View>
-        <Text style={styles.value}>R$ {item.amount.toFixed(2)}</Text>
-        <View style={styles.dateContainer}>
-          <Feather name="calendar" size={12} color="#6B7280" />
-          <Text style={styles.date}>
-            {new Date(item.date).toLocaleDateString('pt-BR')}
-          </Text>
-        </View>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => item.id && confirmDelete(item.id, item.description)}
+        >
+          <Feather name="trash-2" size={18} color="#FFFFFF" />
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => item.id && confirmDelete(item.id, item.description)}
-      >
-        <Feather name="trash-2" size={18} color="#FFFFFF" />
-      </TouchableOpacity>
-    </View>
-  );
+    );
+  };
 
   const renderEmptyComponent = () => (
     <View style={styles.emptyContainer}>
