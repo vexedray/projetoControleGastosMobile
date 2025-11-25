@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { expenseApi, Expense } from '../services/api';
 
 interface ExpenseListProps {
@@ -29,10 +30,10 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
     }
   };
 
-  const confirmDelete = (id: number) => {
+  const confirmDelete = (id: number, description: string) => {
     Alert.alert(
       'Deletar Gasto',
-      'Tem certeza que deseja deletar este gasto?',
+      `Tem certeza que deseja deletar "${description}"?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         { text: 'Deletar', style: 'destructive', onPress: () => handleDelete(id) },
@@ -48,27 +49,39 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
   const renderItem = ({ item }: { item: Expense }) => (
     <View style={styles.item}>
       <View style={styles.itemContent}>
-        <Text style={styles.description}>
+        <Text style={styles.description} numberOfLines={1}>
           {item.description}
         </Text>
-        <Text style={styles.type}>
-          {item.category?.name || 'Sem categoria'}
-        </Text>
+        <View style={styles.categoryContainer}>
+          <Feather name="tag" size={12} color="#3B82F6" />
+          <Text style={styles.category}>
+            {item.category?.name || 'Sem categoria'}
+          </Text>
+        </View>
         <Text style={styles.value}>R$ {item.amount.toFixed(2)}</Text>
-        <Text style={styles.date}>{new Date(item.date).toLocaleDateString('pt-BR')}</Text>
+        <View style={styles.dateContainer}>
+          <Feather name="calendar" size={12} color="#6B7280" />
+          <Text style={styles.date}>
+            {new Date(item.date).toLocaleDateString('pt-BR')}
+          </Text>
+        </View>
       </View>
       <TouchableOpacity
         style={styles.deleteButton}
-        onPress={() => item.id && confirmDelete(item.id)}
+        onPress={() => item.id && confirmDelete(item.id, item.description)}
       >
-        <Text style={styles.deleteButtonText}>Deletar</Text>
+        <Feather name="trash-2" size={18} color="#FFFFFF" />
       </TouchableOpacity>
     </View>
   );
 
   const renderEmptyComponent = () => (
     <View style={styles.emptyContainer}>
+      <Feather name="inbox" size={48} color="#D1D5DB" />
       <Text style={styles.emptyText}>Nenhum gasto registrado ainda</Text>
+      <Text style={styles.emptySubtext}>
+        Use o formulário acima para adicionar seu primeiro gasto
+      </Text>
     </View>
   );
 
@@ -78,8 +91,10 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
       keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
       renderItem={renderItem}
       style={styles.list}
+      contentContainerStyle={styles.listContent}
       showsVerticalScrollIndicator={false}
       ListEmptyComponent={renderEmptyComponent}
+      scrollEnabled={false}
     />
   );
 };
@@ -87,66 +102,82 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
 const styles = StyleSheet.create({
   list: {
     flex: 1,
-    paddingHorizontal: 15,
+  },
+  listContent: {
+    paddingBottom: 10,
   },
   item: {
-    backgroundColor: '#fff',
-    padding: 15,
-    marginVertical: 5,
-    marginHorizontal: 0,
+    backgroundColor: '#F9FAFB',
+    padding: 16,
+    marginBottom: 12,
     borderRadius: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   itemContent: {
     flex: 1,
+    marginRight: 12,
   },
   description: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 6,
   },
-  type: {
-    fontSize: 14,
-    color: '#007AFF',
-    marginBottom: 4,
+  categoryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    gap: 4,
+  },
+  category: {
+    fontSize: 13,
+    color: '#3B82F6',
+    fontWeight: '500',
   },
   value: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#e74c3c',
-    marginBottom: 4,
+    fontWeight: 'bold',
+    color: '#EF4444',
+    marginBottom: 6,
+  },
+  dateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   date: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 13,
+    color: '#6B7280',
   },
   deleteButton: {
-    backgroundColor: '#e74c3c',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderRadius: 6,
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 50,
+    paddingHorizontal: 20,
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
+    fontWeight: '600',
+    color: '#6B7280',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#9CA3AF',
     textAlign: 'center',
   },
 });

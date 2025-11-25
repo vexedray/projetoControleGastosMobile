@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -43,14 +43,10 @@ export default function HomeScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(true);
 
-  useEffect(() => {
-    fetchExpenses();
-    loadCategories();
-  }, []);
-
-  // Recarrega categorias sempre que a tela receber foco
+  // Recarrega dados sempre que a tela receber foco
   useFocusEffect(
     React.useCallback(() => {
+      fetchExpenses();
       loadCategories();
     }, [])
   );
@@ -160,15 +156,12 @@ export default function HomeScreen({ navigation }: any) {
     <SafeAreaView style={styles.container}>
       <ScrollView 
         style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <Feather name="dollar-sign" size={32} color="#3B82F6" />
-          <Text style={styles.title}>Controle de Gastos</Text>
-        </View>
-
         {/* Formulário de Adicionar Gasto */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Adicionar Novo Gasto</Text>
@@ -290,7 +283,7 @@ export default function HomeScreen({ navigation }: any) {
         </View>
 
         {/* Lista de Gastos */}
-        <View style={styles.section}>
+        <View style={styles.listSection}>
           <Text style={styles.sectionTitle}>
             Meus Gastos ({expenses.length})
           </Text>
@@ -312,25 +305,13 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  header: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingTop: 20,
+  scrollContent: {
     paddingBottom: 20,
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginTop: 12,
   },
   section: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
+    marginTop: 16,
     marginBottom: 16,
     padding: 20,
     borderRadius: 12,
@@ -339,6 +320,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+  },
+  listSection: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 20,
+    paddingBottom: 0,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    minHeight: 200,
   },
   sectionTitle: {
     fontSize: 18,
