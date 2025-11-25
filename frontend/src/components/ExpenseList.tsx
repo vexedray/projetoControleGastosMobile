@@ -6,24 +6,17 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  RefreshControl,
 } from 'react-native';
 import { expenseApi, Expense } from '../services/api';
 
 interface ExpenseListProps {
   expenses: Expense[];
   onExpenseDeleted: () => void;
-  refreshing?: boolean;
-  onRefresh?: () => void;
-  ListHeaderComponent?: () => React.ReactElement;
 }
 
 const ExpenseList: React.FC<ExpenseListProps> = ({ 
   expenses, 
-  onExpenseDeleted, 
-  refreshing = false, 
-  onRefresh,
-  ListHeaderComponent 
+  onExpenseDeleted,
 }) => {
   const handleDelete = async (id: number) => {
     try {
@@ -86,13 +79,7 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
       renderItem={renderItem}
       style={styles.list}
       showsVerticalScrollIndicator={false}
-      ListHeaderComponent={ListHeaderComponent}
       ListEmptyComponent={renderEmptyComponent}
-      refreshControl={
-        onRefresh ? (
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        ) : undefined
-      }
     />
   );
 };
