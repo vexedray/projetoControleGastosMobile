@@ -13,8 +13,10 @@ import {
 import { Feather } from '@expo/vector-icons';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigation } from '@react-navigation/native';
 
 export default function LoginScreen() {
+  const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -108,12 +110,13 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
-          <View style={styles.testInfo}>
-            <Text style={styles.testInfoTitle}>Usuários de teste:</Text>
-            <Text style={styles.testInfoText}>• rayssa@email.com</Text>
-            <Text style={styles.testInfoText}>• joao@email.com</Text>
-            <Text style={styles.testInfoText}>Senha: senha123</Text>
+          <View style={styles.registerContainer}>
+            <Text style={styles.registerText}>Não tem uma conta? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Register' as never)}>
+              <Text style={styles.registerLink}>Cadastre-se</Text>
+            </TouchableOpacity>
           </View>
+
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -203,8 +206,24 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginRight: 8,
   },
-  testInfo: {
+  registerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginTop: 24,
+    marginBottom: 8,
+  },
+  registerText: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  registerLink: {
+    fontSize: 14,
+    color: '#3B82F6',
+    fontWeight: '600',
+  },
+  testInfo: {
+    marginTop: 16,
     padding: 16,
     backgroundColor: '#EFF6FF',
     borderRadius: 12,

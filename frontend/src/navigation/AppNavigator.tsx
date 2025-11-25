@@ -1,15 +1,18 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
 import { ActivityIndicator, View, StyleSheet, TouchableOpacity } from 'react-native';
 
 import HomeScreen from '../screens/HomeScreen';
 import CategoriesScreen from '../screens/CategoriesScreen';
 import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
 import { useAuth } from '../contexts/AuthContext';
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
 function MainTabNavigator() {
   const { logout } = useAuth();
@@ -74,6 +77,15 @@ function MainTabNavigator() {
   );
 }
 
+function AuthStackNavigator() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+    </Stack.Navigator>
+  );
+}
+
 export default function AppNavigator() {
   const { user, loading } = useAuth();
 
@@ -87,7 +99,7 @@ export default function AppNavigator() {
 
   return (
     <NavigationContainer>
-      {user ? <MainTabNavigator /> : <LoginScreen />}
+      {user ? <MainTabNavigator /> : <AuthStackNavigator />}
     </NavigationContainer>
   );
 }

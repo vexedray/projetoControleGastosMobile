@@ -53,6 +53,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/auth/login").permitAll()
                     .requestMatchers("/api/auth/register").permitAll()
+                    .requestMatchers("/api/users/check-email/**").permitAll()
                     
                     // Qualquer outra requisição precisa de autenticação
                     .anyRequest().authenticated();
