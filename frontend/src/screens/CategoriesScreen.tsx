@@ -16,6 +16,7 @@ interface Category {
   id: number;
   name: string;
   description?: string;
+  color?: string;
   createdAt: string;
   totalExpenses?: number;
 }
@@ -24,8 +25,20 @@ export default function CategoriesScreen() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [selectedColor, setSelectedColor] = useState('#22C55E');
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+
+  const availableColors = [
+    '#22C55E', // Verde
+    '#3B82F6', // Azul
+    '#F59E0B', // Amarelo
+    '#EF4444', // Vermelho
+    '#8B5CF6', // Roxo
+    '#EC4899', // Rosa
+    '#14B8A6', // Turquesa
+    '#F97316', // Laranja
+  ];
 
   useEffect(() => {
     fetchCategories();
@@ -53,6 +66,7 @@ export default function CategoriesScreen() {
         await api.put(`/categories/${editingId}`, {
           name: name.trim(),
           description: description.trim() || undefined,
+          color: selectedColor,
         });
         Alert.alert('Sucesso', 'Categoria atualizada!');
         setEditingId(null);
@@ -60,12 +74,14 @@ export default function CategoriesScreen() {
         await api.post('/categories', {
           name: name.trim(),
           description: description.trim() || undefined,
+          color: selectedColor,
         });
         Alert.alert('Sucesso', 'Categoria criada!');
       }
       
       setName('');
       setDescription('');
+      setSelectedColor('#22C55E');
       fetchCategories();
     } catch (error) {
       console.error('Erro ao salvar categoria:', error);
@@ -79,12 +95,14 @@ export default function CategoriesScreen() {
     console.log('Editando categoria:', category);
     setName(category.name);
     setDescription(category.description || '');
+    setSelectedColor(category.color || '#22C55E');
     setEditingId(category.id);
   };
 
   const handleCancelEdit = () => {
     setName('');
     setDescription('');
+    setSelectedColor('#22C55E');
     setEditingId(null);
   };
 
@@ -117,26 +135,15 @@ export default function CategoriesScreen() {
     );
   };
 
-  const getCategoryColor = (index: number) => {
-    const colors = ['#22C55E', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6'];
-    return colors[index % colors.length];
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR');
-  };
-
-  const renderCategoryItem = ({ item, index }: { item: Category; index: number }) => (
+  const renderCategoryItem = ({ item }: { item: Category }) => (
     <View style={styles.categoryCard}>
       <View style={styles.categoryContent}>
-        <View style={[styles.categoryDot, { backgroundColor: getCategoryColor(index) }]} />
+        <View style={[styles.categoryDot, { backgroundColor: item.color || '#22C55E' }]} />
         <View style={styles.categoryInfo}>
           <Text style={styles.categoryName}>{item.name}</Text>
-          <Text style={styles.categoryDate}>Criada em: {formatDate(item.createdAt)}</Text>
-          <Text style={styles.categoryExpenses}>
-            Gastos: R$ {item.totalExpenses?.toFixed(2) || '0,00'}
-          </Text>
+          {item.description && (
+            <Text style={styles.categoryDescription}>{item.description}</Text>
+          )}
         </View>
       </View>
       <View style={styles.categoryActions}>
@@ -193,7 +200,28 @@ export default function CategoriesScreen() {
           placeholderTextColor="#9CA3AF"
           value={description}
           onChangeText={setDescription}
+          multiline
         />
+        
+        <Text style={styles.colorLabel}>Escolha uma cor:</Text>
+        <View style={styles.colorPicker} key={`color-picker-${editingId || 'new'}-${selectedColor}`}>
+          {availableColors.map((color) => (
+            <TouchableOpacity
+              key={color}
+              style={[
+                styles.colorOption,
+                { backgroundColor: color },
+                selectedColor === color && styles.colorOptionSelected,
+              ]}
+              onPress={() => {
+                console.log('Cor selecionada:', color);
+                setSelectedColor(color);
+              }}
+              activeOpacity={0.7}
+            />
+          ))}
+        </View>
+
         <TouchableOpacity
           style={[styles.submitButton, loading && styles.submitButtonDisabled]}
           onPress={handleSubmit}
@@ -288,6 +316,29 @@ const styles = StyleSheet.create({
     color: '#92400E',
     fontWeight: '600',
   },
+  colorLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 12,
+  },
+  colorPicker: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 16,
+  },
+  colorOption: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  colorOptionSelected: {
+    borderColor: '#111827',
+    borderWidth: 3,
+  },
   submitButton: {
     backgroundColor: '#3B82F6',
     borderRadius: 8,
@@ -351,14 +402,10 @@ const styles = StyleSheet.create({
     color: '#111827',
     marginBottom: 4,
   },
-  categoryDate: {
-    fontSize: 13,
+  categoryDescription: {
+    fontSize: 14,
     color: '#6B7280',
-    marginBottom: 2,
-  },
-  categoryExpenses: {
-    fontSize: 13,
-    color: '#6B7280',
+    lineHeight: 18,
   },
   categoryActions: {
     flexDirection: 'row',

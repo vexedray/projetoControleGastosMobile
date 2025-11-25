@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
-import { ActivityIndicator, View, StyleSheet, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, View, StyleSheet, TouchableOpacity, AppState } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import HomeScreen from './src/screens/HomeScreen';
 import CategoriesScreen from './src/screens/CategoriesScreen';
@@ -81,6 +82,27 @@ function AppNavigator() {
 }
 
 export default function App() {
+  useEffect(() => {
+    // Limpa o armazenamento quando o app é iniciado
+    const clearStorageOnStart = async () => {
+      await AsyncStorage.removeItem('@expense_token');
+      await AsyncStorage.removeItem('@expense_user');
+    };
+    
+    clearStorageOnStart();
+
+    // Limpa quando o app vai para segundo plano
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'background' || nextAppState === 'inactive') {
+        clearStorageOnStart();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   return (
     <AuthProvider>
       <AppNavigator />

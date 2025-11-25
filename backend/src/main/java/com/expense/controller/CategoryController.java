@@ -73,6 +73,8 @@ public class CategoryController {
                 .map(existingCategory -> {
                     existingCategory.setName(requestDTO.getName());
                     existingCategory.setDescription(requestDTO.getDescription());
+                    existingCategory.setColor(requestDTO.getColor());
+                    existingCategory.setIcon(requestDTO.getIcon());
                     Category updated = categoryService.save(existingCategory);
                     logger.info("Category {} updated successfully", id);
                     return ResponseEntity.ok(categoryMapper.toResponseDTO(updated));

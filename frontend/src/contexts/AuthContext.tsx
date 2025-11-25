@@ -23,25 +23,20 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadStoredUser();
+    // Limpa o armazenamento ao iniciar o app
+    clearStorage();
   }, []);
 
-  const loadStoredUser = async () => {
+  const clearStorage = async () => {
     try {
-      const storedUser = await AsyncStorage.getItem('@expense_user');
-      const storedToken = await AsyncStorage.getItem('@expense_token');
-      
-      if (storedUser && storedToken) {
-        setUser(JSON.parse(storedUser));
-        api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-      }
+      await AsyncStorage.removeItem('@expense_user');
+      await AsyncStorage.removeItem('@expense_token');
+      delete api.defaults.headers.common['Authorization'];
     } catch (error) {
-      console.error('Erro ao carregar usuário:', error);
-    } finally {
-      setLoading(false);
+      console.error('Erro ao limpar storage:', error);
     }
   };
 
