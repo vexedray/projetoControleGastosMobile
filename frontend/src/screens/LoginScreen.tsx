@@ -50,9 +50,9 @@ export default function LoginScreen() {
       <View style={styles.content}>
         <View style={styles.header}>
           <View style={styles.iconContainer}>
-            <Feather name="dollar-sign" size={40} color="#3B82F6" />
+            <Feather name="dollar-sign" size={40} color="#33cc5c" />
           </View>
-          <Text style={styles.title}>Controle de Gastos</Text>
+          <Text style={styles.title}>Spendly</Text>
           <Text style={styles.subtitle}>Faça login para continuar</Text>
         </View>
 
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#c8ecc5ff',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#111827',
+    color: '#219740ff',
     marginBottom: 8,
   },
   subtitle: {
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   loginButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#33cc5c',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   },
   registerLink: {
     fontSize: 14,
-    color: '#3B82F6',
+    color: '#33cc5c',
     fontWeight: '600',
   },
   testInfo: {
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   },
   testInfoText: {
     fontSize: 13,
-    color: '#3B82F6',
+    color: '#33cc5c',
     marginBottom: 4,
   },
 });

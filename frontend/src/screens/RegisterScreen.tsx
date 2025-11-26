@@ -119,12 +119,12 @@ export default function RegisterScreen() {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Feather name="arrow-left" size={24} color="#3B82F6" />
+            <Feather name="arrow-left" size={24} color="#33cc5c" />
           </TouchableOpacity>
 
           <View style={styles.header}>
             <View style={styles.iconContainer}>
-              <Feather name="user-plus" size={40} color="#3B82F6" />
+              <Feather name="user-plus" size={40} color="#33cc5c" />
             </View>
             <Text style={styles.title}>Criar Conta</Text>
             <Text style={styles.subtitle}>Preencha os dados para se cadastrar</Text>
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#c8ecc5ff',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#111827',
+    color: '#219740ff',
     marginBottom: 8,
   },
   subtitle: {
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   registerButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#33cc5c',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   },
   loginLink: {
     fontSize: 14,
-    color: '#3B82F6',
+    color: '#33cc5c',
     fontWeight: '600',
   },
 });

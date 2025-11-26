@@ -187,7 +187,7 @@ export default function ChartsScreen() {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#3B82F6" />
+        <ActivityIndicator size="large" color="#33cc5c" />
         <Text style={{ marginTop: 16, color: '#6B7280' }}>Carregando dados...</Text>
       </View>
     );
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
   },
   totalCard: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#33cc5c',
     margin: 16,
     padding: 24,
     borderRadius: 12,

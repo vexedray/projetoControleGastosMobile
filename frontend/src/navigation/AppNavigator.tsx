@@ -32,7 +32,7 @@ function MainTabNavigator() {
 
           return <Feather name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#3B82F6',
+        tabBarActiveTintColor: '#33cc5c',
         tabBarInactiveTintColor: '#9CA3AF',
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
@@ -99,7 +99,7 @@ export default function AppNavigator() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3B82F6" />
+        <ActivityIndicator size="large" color="#33cc5c" />
       </View>
     );
   }

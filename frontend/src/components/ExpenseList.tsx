@@ -56,7 +56,7 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
             {item.description}
           </Text>
           <View style={styles.categoryContainer}>
-            <Feather name="tag" size={12} color="#3B82F6" />
+            <Feather name="tag" size={12} color="#33cc5c" />
             <Text style={styles.category}>
               {categoryName}
             </Text>
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   },
   category: {
     fontSize: 13,
-    color: '#3B82F6',
+    color: '#33cc5c',
     fontWeight: '500',
   },
   value: {

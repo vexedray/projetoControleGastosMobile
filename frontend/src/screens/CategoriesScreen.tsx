@@ -53,7 +53,7 @@ export default function CategoriesScreen() {
 
   const availableColors = [
     '#22C55E', // Verde
-    '#3B82F6', // Azul
+    '#33cc5c', // Verde claro
     '#F59E0B', // Amarelo
     '#EF4444', // Vermelho
     '#8B5CF6', // Roxo
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     borderWidth: 3,
   },
   submitButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#33cc5c',
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',

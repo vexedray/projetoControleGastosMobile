@@ -212,7 +212,7 @@ export default function HomeScreen({ navigation }: any) {
           <Text style={styles.sectionTitle}>Adicionar Novo Gasto</Text>
           
           {loadingCategories ? (
-            <ActivityIndicator size="large" color="#3B82F6" />
+            <ActivityIndicator size="large" color="#33cc5c" />
           ) : (
             <>
               <View style={styles.inputGroup}>
@@ -251,7 +251,7 @@ export default function HomeScreen({ navigation }: any) {
                     onPress={() => navigation?.navigate('Categories')}
                     style={styles.addCategoryButton}
                   >
-                    <Feather name="plus" size={16} color="#3B82F6" />
+                    <Feather name="plus" size={16} color="#33cc5c" />
                     <Text style={styles.addCategoryText}>Nova Categoria</Text>
                   </TouchableOpacity>
                 </View>
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   },
   addCategoryText: {
     fontSize: 14,
-    color: '#3B82F6',
+    color: '#33cc5c',
     fontWeight: '600',
   },
   inputContainer: {
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     flexDirection: 'row',
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#33cc5c',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
