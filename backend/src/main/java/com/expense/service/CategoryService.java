@@ -2,7 +2,9 @@ package com.expense.service;
 
 import com.expense.dto.request.CategoryRequestDTO;
 import com.expense.model.Category;
+import com.expense.model.User;
 import com.expense.repository.CategoryRepository;
+import com.expense.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -19,6 +21,25 @@ public class CategoryService {
     
     @Autowired
     private CategoryRepository categoryRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    /**
+     * Find all categories for a specific user
+     */
+    public List<Category> getAllCategories(Long userId) {
+        logger.info("Buscando categorias do usuário: {}", userId);
+        return categoryRepository.findByUserId(userId);
+    }
+    
+    /**
+     * Find category by ID (only if belongs to user)
+     */
+    public Optional<Category> getCategoryById(Long id, Long userId) {
+        logger.info("Buscando categoria {} do usuário {}", id, userId);
+        return categoryRepository.findByIdAndUserId(id, userId);
+    }
     
     public List<Category> findAll() {
         logger.debug("Buscando todas as categorias");
@@ -42,6 +63,55 @@ public class CategoryService {
         logger.debug("Buscando categoria com nome: {}", name);
         Category category = categoryRepository.findByName(name);
         return Optional.ofNullable(category);
+    }
+    
+    /**
+     * Create new category for a user
+     */
+    public Category createCategory(CategoryRequestDTO categoryDTO, Long userId) {
+        logger.info("Criando categoria para usuário: {}", userId);
+        
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        
+        Category category = new Category();
+        category.setName(categoryDTO.getName());
+        category.setDescription(categoryDTO.getDescription());
+        category.setColor(categoryDTO.getColor());
+        category.setIcon(categoryDTO.getIcon());
+        category.setUser(user);
+        category.setCreatedAt(LocalDateTime.now());
+        
+        return categoryRepository.save(category);
+    }
+    
+    /**
+     * Update category (only if belongs to user)
+     */
+    public Category updateCategory(Long id, CategoryRequestDTO categoryDTO, Long userId) {
+        logger.info("Atualizando categoria {} do usuário {}", id, userId);
+        
+        Category category = categoryRepository.findByIdAndUserId(id, userId)
+            .orElseThrow(() -> new RuntimeException("Categoria não encontrada ou não pertence ao usuário"));
+        
+        category.setName(categoryDTO.getName());
+        category.setDescription(categoryDTO.getDescription());
+        category.setColor(categoryDTO.getColor());
+        category.setIcon(categoryDTO.getIcon());
+        
+        return categoryRepository.save(category);
+    }
+    
+    /**
+     * Delete category (only if belongs to user)
+     */
+    public void deleteCategory(Long id, Long userId) {
+        logger.info("Deletando categoria {} do usuário {}", id, userId);
+        
+        Category category = categoryRepository.findByIdAndUserId(id, userId)
+            .orElseThrow(() -> new RuntimeException("Categoria não encontrada ou não pertence ao usuário"));
+        
+        categoryRepository.delete(category);
     }
     
     public Category createCategory(CategoryRequestDTO categoryDTO) {

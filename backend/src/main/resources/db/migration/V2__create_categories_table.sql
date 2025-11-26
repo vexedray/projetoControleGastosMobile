@@ -4,5 +4,7 @@ CREATE TABLE categories (
     description VARCHAR(255),
     color VARCHAR(7),
     icon VARCHAR(50),
-    created_at DATETIME NOT NULL
+    user_id BIGINT NOT NULL,
+    created_at DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES user(id)
 );

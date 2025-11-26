@@ -30,6 +30,10 @@ public class Category {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+    
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     private List<Expense> expenses;
     
@@ -101,6 +105,14 @@ public class Category {
     
     public void setCreatedAt(LocalDateTime createdAt) { 
         this.createdAt = createdAt; 
+    }
+    
+    public User getUser() {
+        return user;
+    }
+    
+    public void setUser(User user) {
+        this.user = user;
     }
     
     public List<Expense> getExpenses() {

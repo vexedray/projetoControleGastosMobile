@@ -8,6 +8,7 @@ import com.expense.model.Expense;
 import com.expense.model.Category;
 import com.expense.model.User;
 import com.expense.model.hateoas.ExpenseModel;
+import com.expense.repository.UserRepository;
 import com.expense.service.ExpenseService;
 import com.expense.service.CategoryService;
 import com.expense.service.UserService;
@@ -15,6 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,43 +49,68 @@ public class ExpenseController {
     
     @Autowired
     private ExpenseModelAssembler expenseModelAssembler;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    /**
+     * Get current authenticated user ID
+     */
+    private Long getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = ((UserDetails) authentication.getPrincipal()).getUsername();
+        User user = userRepository.findByEmail(email);
+        return user.getId();
+    }
 
     @GetMapping
     public ResponseEntity<CollectionModel<ExpenseModel>> getAllExpenses() {
-        logger.info("GET /api/expenses - Fetching all expenses");
-        List<Expense> expenses = expenseService.findAll();
-        List<ExpenseResponseDTO> expensesDTO = expenses.stream()
-                .map(expenseMapper::toResponseDTO)
-                .collect(Collectors.toList());
-        
-        // Converte para HATEOAS models
-        CollectionModel<ExpenseModel> expenseModels = CollectionModel.of(
-            expensesDTO.stream()
-                .map(expenseModelAssembler::toModel)
-                .collect(Collectors.toList())
-        );
-        
-        // Adiciona link para a própria coleção
-        expenseModels.add(linkTo(methodOn(ExpenseController.class).getAllExpenses()).withSelfRel());
-        
-        logger.info("Found {} expenses", expenses.size());
-        return ResponseEntity.ok(expenseModels);
+        try {
+            Long userId = getCurrentUserId();
+            logger.info("GET /api/expenses - Fetching all expenses for user: {}", userId);
+            
+            List<Expense> expenses = expenseService.getAllExpenses(userId);
+            List<ExpenseResponseDTO> expensesDTO = expenses.stream()
+                    .map(expenseMapper::toResponseDTO)
+                    .collect(Collectors.toList());
+            
+            CollectionModel<ExpenseModel> expenseModels = CollectionModel.of(
+                expensesDTO.stream()
+                    .map(expenseModelAssembler::toModel)
+                    .collect(Collectors.toList())
+            );
+            
+            expenseModels.add(linkTo(methodOn(ExpenseController.class).getAllExpenses()).withSelfRel());
+            
+            logger.info("Found {} expenses for user {}", expenses.size(), userId);
+            return ResponseEntity.ok(expenseModels);
+        } catch (Exception e) {
+            logger.error("Error fetching expenses", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
     
     @GetMapping("/{id}")
     public ResponseEntity<ExpenseModel> getExpenseById(@PathVariable Long id) {
-        logger.info("GET /api/expenses/{} - Fetching expense by ID", id);
-        return expenseService.findById(id)
-                .map(expense -> {
-                    logger.info("Expense found: amount={}", expense.getAmount());
-                    ExpenseResponseDTO dto = expenseMapper.toResponseDTO(expense);
-                    ExpenseModel model = expenseModelAssembler.toModel(dto);
-                    return ResponseEntity.ok(model);
-                })
-                .orElseGet(() -> {
-                    logger.warn("Expense with ID {} not found", id);
-                    return ResponseEntity.notFound().build();
-                });
+        try {
+            Long userId = getCurrentUserId();
+            logger.info("GET /api/expenses/{} - Fetching expense for user: {}", id, userId);
+            
+            return expenseService.getExpenseById(id, userId)
+                    .map(expense -> {
+                        logger.info("Expense found: amount={}", expense.getAmount());
+                        ExpenseResponseDTO dto = expenseMapper.toResponseDTO(expense);
+                        ExpenseModel model = expenseModelAssembler.toModel(dto);
+                        return ResponseEntity.ok(model);
+                    })
+                    .orElseGet(() -> {
+                        logger.warn("Expense {} not found for user {}", id, userId);
+                        return ResponseEntity.notFound().build();
+                    });
+        } catch (Exception e) {
+            logger.error("Error fetching expense", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
     
     @GetMapping("/user/{userId}")
@@ -148,50 +177,22 @@ public class ExpenseController {
                 });
     }
     
+    
     @PostMapping
     public ResponseEntity<ExpenseModel> createExpense(@Valid @RequestBody ExpenseRequestDTO requestDTO) {
-        logger.info("POST /api/expenses - Creating new expense");
-        
         try {
-            // Buscar categoria
-            Category category = categoryService.findById(requestDTO.getCategoryId())
-                    .orElseThrow(() -> {
-                        logger.error("Category with ID {} not found", requestDTO.getCategoryId());
-                        return new RuntimeException("Category not found");
-                    });
+            Long userId = getCurrentUserId();
+            logger.info("POST /api/expenses - Creating expense for user: {}", userId);
             
-            // Buscar usuário - se userId não foi fornecido, usa o do requestDTO
-            Long userId = requestDTO.getUserId();
-            if (userId == null) {
-                logger.warn("UserId not provided in request, this should not happen");
-                throw new RuntimeException("User ID is required");
-            }
-            
-            User user = userService.getUserById(userId)
-                    .orElseThrow(() -> {
-                        logger.error("User with ID {} not found", userId);
-                        return new RuntimeException("User not found");
-                    });
-
-            Expense expense = expenseMapper.toEntity(requestDTO);
-            expense.setCategory(category);
-            expense.setUser(user);
-            
-            Expense savedExpense = expenseService.save(expense);
-            ExpenseResponseDTO dto = expenseMapper.toResponseDTO(savedExpense);
+            Expense expense = expenseService.createExpense(requestDTO, userId);
+            ExpenseResponseDTO dto = expenseMapper.toResponseDTO(expense);
             ExpenseModel model = expenseModelAssembler.toModel(dto);
             
-            logger.info("Expense created with ID: {} - amount: {} - category: {} - user: {}", 
-                savedExpense.getId(), 
-                requestDTO.getAmount(), 
-                category.getName(),
-                user.getEmail());
-            
+            logger.info("Expense created with ID: {}", expense.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(model);
-            
-        } catch (RuntimeException e) {
-            logger.error("Error creating expense: {}", e.getMessage());
-            throw e;
+        } catch (Exception e) {
+            logger.error("Error creating expense", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
     
@@ -199,49 +200,40 @@ public class ExpenseController {
     public ResponseEntity<ExpenseModel> updateExpense(
             @PathVariable Long id,
             @Valid @RequestBody ExpenseRequestDTO requestDTO) {
-        logger.info("PUT /api/expenses/{} - Updating expense", id);
-        
         try {
-            return expenseService.findById(id)
-                    .map(existingExpense -> {
-                        existingExpense.setAmount(requestDTO.getAmount());
-                        existingExpense.setDescription(requestDTO.getDescription());
-                        
-                        if (requestDTO.getCategoryId() != null) {
-                            Category category = categoryService.findById(requestDTO.getCategoryId())
-                                    .orElseThrow(() -> new RuntimeException("Category not found"));
-                            existingExpense.setCategory(category);
-                        }
-                        
-                        Expense updated = expenseService.save(existingExpense);
-                        ExpenseResponseDTO dto = expenseMapper.toResponseDTO(updated);
-                        ExpenseModel model = expenseModelAssembler.toModel(dto);
-                        logger.info("Expense {} updated successfully", id);
-                        return ResponseEntity.ok(model);
-                    })
-                    .orElseGet(() -> {
-                        logger.warn("Expense with ID {} not found for update", id);
-                        return ResponseEntity.notFound().build();
-                    });
+            Long userId = getCurrentUserId();
+            logger.info("PUT /api/expenses/{} - Updating expense for user: {}", id, userId);
+            
+            Expense expense = expenseService.updateExpense(id, requestDTO, userId);
+            ExpenseResponseDTO dto = expenseMapper.toResponseDTO(expense);
+            ExpenseModel model = expenseModelAssembler.toModel(dto);
+            
+            logger.info("Expense {} updated successfully", id);
+            return ResponseEntity.ok(model);
+        } catch (RuntimeException e) {
+            logger.error("Expense not found or unauthorized", e);
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            logger.error("Error updating expense: {}", e.getMessage());
-            throw e;
+            logger.error("Error updating expense", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
+    
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteExpense(@PathVariable Long id) {
-        logger.info("DELETE /api/expenses/{} - Deleting expense", id);
-        
-        return expenseService.findById(id)
-                .map(expense -> {
-                    expenseService.deleteById(id);
-                    logger.info("Expense {} deleted successfully", id);
-                    return ResponseEntity.noContent().<Void>build();
-                })
-                .orElseGet(() -> {
-                    logger.warn("Expense with ID {} not found for deletion", id);
-                    return ResponseEntity.notFound().build();
-                });
+        try {
+            Long userId = getCurrentUserId();
+            logger.info("DELETE /api/expenses/{} - Deleting expense for user: {}", id, userId);
+            
+            expenseService.deleteExpense(id, userId);
+            logger.info("Expense {} deleted successfully", id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            logger.error("Expense not found or unauthorized", e);
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.error("Error deleting expense", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }
