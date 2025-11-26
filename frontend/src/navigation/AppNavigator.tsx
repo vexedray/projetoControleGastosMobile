@@ -10,6 +10,7 @@ import CategoriesScreen from '../screens/CategoriesScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import { useAuth } from '../contexts/AuthContext';
+import ChartsScreen from '../screens/ChartsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -73,7 +74,13 @@ function MainTabNavigator() {
         component={CategoriesScreen}
         options={{ title: 'Categorias' }}
       />
+      <Tab.Screen 
+        name="Gráficos" 
+        component={ChartsScreen}
+        options={{ title: 'Análise de Gastos' }}
+      />
     </Tab.Navigator>
+    
   );
 }
 
