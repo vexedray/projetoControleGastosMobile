@@ -222,7 +222,7 @@ export default function ChartsScreen() {
             <Text style={styles.chartTitle}>Comparativo de Categorias</Text>
             <BarChart
               data={barChartData}
-              width={screenWidth - 32}
+              width={screenWidth - 64}
               height={220}
               yAxisLabel="R$ "
               yAxisSuffix=""
@@ -240,9 +240,14 @@ export default function ChartsScreen() {
                   strokeDasharray: '',
                   stroke: '#E5E7EB',
                 },
+                barPercentage: 0.7,
+                propsForLabels: {
+                  fontSize: 10,
+                },
               }}
               style={styles.chart}
               fromZero
+              showValuesOnTopOfBars
             />
           </View>
 

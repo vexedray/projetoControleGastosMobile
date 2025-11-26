@@ -1,251 +1,235 @@
-# 📱 Frontend - Controle de Gastos Mobile
-
-Aplicativo React Native para controle de gastos pessoais.
-
-## 🚀 Como Rodar o Projeto
-
-### 1️⃣ Pré-requisitos
-
-- **Node.js** instalado (versão 14 ou superior)
-- **Expo CLI** (será instalado automaticamente)
-- **Backend rodando** na porta 8083
-
-### 2️⃣ Instalar Dependências
-
-```bash
-cd frontend
-npm install
-```
-
-### 3️⃣ Iniciar o Projeto
-
-```bash
-npm start
-```
-
-### 4️⃣ Abrir no Dispositivo
-
-Após executar `npm start`, você verá um QR Code. Escolha uma opção:
-
-**Opção A: Emulador Android**
-- Pressione `a` no terminal
-- Ou use Android Studio
-
-**Opção B: Emulador iOS (apenas Mac)**
-- Pressione `i` no terminal
-- Ou use Xcode Simulator
-
-**Opção C: Dispositivo Físico**
-1. Instale o **Expo Go** no seu celular:
-   - [Android - Play Store](https://play.google.com/store/apps/details?id=host.exp.exponent)
-   - [iOS - App Store](https://apps.apple.com/app/expo-go/id982107779)
-
-2. Escaneie o QR Code:
-   - **Android**: Use o app Expo Go
-   - **iOS**: Use a câmera nativa
+# 💰 Sistema de Controle de Gastos
 
 ---
 
-## ⚙️ Configuração Importante
+Sistema completo de controle de gastos pessoais com backend em **Spring Boot** e frontend em **React Native**.
 
-### 📍 Configurar IP do Backend
+---
 
-O projeto está configurado para **emulador Android** (`10.0.2.2:8083`).
+## 📋 Sobre o Projeto
 
-**Se estiver usando dispositivo físico ou emulador iOS:**
+Aplicativo mobile desenvolvido para controle financeiro pessoal, permitindo aos usuários registrar, categorizar e visualizar seus gastos de forma simples e intuitiva.
 
-1. Descubra o IP da sua máquina:
-   ```bash
-   # Windows
-   ipconfig
+### 🎯 Objetivo Principal
+
+Desenvolver uma solução completa que auxilie pessoas a terem maior controle sobre suas finanças pessoais, acompanhar seus gastos mensais e tomar decisões financeiras mais conscientes.
+
+---
+
+## ✨ Funcionalidades
+
+### 📌 Funcionalidades Principais
+
+- ✅ **Cadastro de Despesas**: Adicionar gastos com descrição, valor, categoria e data
+- ✅ **Listagem de Gastos**: Visualizar histórico completo de despesas registradas
+- ✅ **Gerenciamento de Usuários**: Sistema de cadastro e autenticação JWT
+- ✅ **Categorização**: Organização de gastos por categorias personalizáveis
+- ✅ **Exclusão de Despesas**: Remover registros indesejados
+- ✅ Gráficos de gastos por categoria
+  
+### 🔮 Funcionalidades Futuras (Opcionais)
+
+- 🔄 Editar despesas existentes
+- 🎯 Definir metas de gastos
+- 🔔 Notificações e alertas
+- 📄 Exportar dados para PDF/Excel
+- 🎨 Categorias personalizadas
+- 📄 Filtros**: Busca por data, categoria e valor
+- 🌙 Modo escuro
+
+---
+
+## 🚀 Tecnologias Utilizadas
+
+### Backend
+- **Java 17+**
+- **Spring Boot 3.1.0**
+- **Spring Data JPA**
+- **MySQL 8.0**
+- **Maven 3.9.4**
+
+### Frontend
+- **React Native 0.72.6**
+- **Expo 49.0.15**
+- **TypeScript**
+- **Axios** (HTTP client)
+
+## 📋 Pré-requisitos
+
+### Backend
+- Java 17 ou superior
+- Maven 3.6+
+- MySQL Server 8.0+
+
+### Frontend
+- Node.js 16+
+- npm
+- Expo CLI
+
+
+
+### 🔧 Configuração do Backend
+
+```
+# Navegar para o diretório do backend
+cd backend
+
+# Configurar variáveis de ambiente do Maven (Windows)
+$env:MAVEN_HOME = "C:\Users\rayssa_almeida\apache-maven-3.9.4"
+$env:PATH = "$env:MAVEN_HOME\bin;$env:PATH"
+
+# Instalar dependências
+mvn clean install
+
+# Executar o projeto
+mvn spring-boot:run
+```
+
+2. **Configuração do banco de dados**
+
+```
+-Instale o MySQL Server
+-Crie um usuário root sem senha ou configure no application.properties
+-O banco expense_control será criado automaticamente
+```
+
+3. **Configure o arquivo `application.properties`**
+```properties
+# Database Configuration
+spring.datasource.url=jdbc:mysql://localhost:3306/controle_gastos
+spring.datasource.username=seu_usuario
+spring.datasource.password=sua_senha
+
+# JPA Configuration
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+
+# JWT Configuration
+jwt.secret=sua_chave_secreta_aqui
+jwt.expiration=86400000
+```
+
+O backend estará rodando em `http://localhost:8083`
+
+### 📱 Configuração do Frontend
+
+1. **Navegue até a pasta frontend**
+```bash
+cd ../frontend
+```
+
+2. **Instale as dependências**
+```bash
+
+npm axios 
+npm install --legacy-peer-deps
+npm install react-native-chart-kit react-native-svg
    
-   # Mac/Linux
-   ifconfig
-   ```
+3. **Configure a URL da API**
 
-2. Edite o arquivo `src/services/api.ts` (linha 29):
-   ```typescript
-   const API_BASE_URL = 'http://192.168.1.100:8083/api'; // Coloque seu IP aqui
-   ```
+Edite o arquivo `src/services/api.ts`:
+```typescript
+const api = axios.create({
+  baseURL: 'http://localhost:8083/api', // ou seu IP local
+});
+```
 
-3. **Certifique-se de que:**
-   - ✅ Backend está rodando (`mvn spring-boot:run`)
-   - ✅ MySQL está ativo
-   - ✅ Celular está na **mesma rede Wi-Fi** do computador
+4. **Execute o projeto**
+```bash
+npx expo start
+```
+
+5. **Abra no seu dispositivo**
+- Escaneie o QR Code com o app **Expo Go** (Android/iOS)
+- Ou pressione `a` para Android, `i` para iOS
 
 ---
 
-## 📂 Estrutura do Projeto
+## 🗂️ Estrutura do Projeto
+
+### Backend (Spring Boot)
+
+```
+backend/
+├── src/
+│   └── main/
+│       ├── java/
+│       │   └── com/expense/
+│       │       ├── controller/      # Controllers REST
+│       │       │   ├── ExpenseController.java
+│       │       │   └── UserController.java
+│       │       ├── model/           # Entidades JPA
+│       │       │   ├── Expense.java
+│       │       │   └── User.java
+│       │       ├── repository/      # Repositórios JPA
+│       │       │   ├── ExpenseRepository.java
+│       │       │   └── UserRepository.java
+│       │       ├── service/         # Regras de negócio
+│       │       │   ├── ExpenseService.java
+│       │       │   └── UserService.java
+│       │       └── ExpenseApplication.java
+│       └── resources/
+│           ├── application.properties
+│           └── data.sql
+├── pom.xml
+└── README.md
+```
+
+### Frontend (React Native)
 
 ```
 frontend/
 ├── src/
-│   ├── components/
-│   │   ├── ExpenseForm.tsx    # Formulário de adicionar gasto
-│   │   └── ExpenseList.tsx    # Lista de gastos
-│   ├── screens/
-│   │   ├── HomeScreen.tsx     # Tela principal (gastos)
-│   │   └── CategoriesScreen.tsx # Tela de categorias
-│   └── services/
-│       └── api.ts             # Integração com backend
-├── App.tsx                     # Navegação principal
-└── package.json               # Dependências
+│   ├── components/          # Componentes reutilizáveis
+│   │   ├── ExpenseForm.tsx
+│   │   └── ExpenseList.tsx
+│   ├── screens/             # Telas do app
+│   │   ├── AddExpenseScreen.tsx
+│   │   ├── HomeScreen.tsx
+│   │   └── LoginScreen.tsx
+│   ├── services/            # Serviços e API
+│   │   └── api.ts
+│   └── App.tsx
+├── package.json
+└── README.md
 ```
 
 ---
 
-## 🎯 Funcionalidades
 
-### ✅ Tela de Gastos (Home)
-- [x] Listar todos os gastos
-- [x] Adicionar novo gasto
-- [x] Deletar gasto (com confirmação)
-- [x] Atualizar lista (pull-to-refresh)
-- [x] Exibir categoria de cada gasto
+## 📊 Modelo de Dados
 
-### ✅ Tela de Categorias
-- [x] Listar todas as categorias
-- [x] Criar nova categoria
-- [x] Exibir descrição e data de criação
-- [x] Atualizar lista (pull-to-refresh)
+### 📐 Diagrama de Classes (UML)
 
----
+![Diagrama sem nome (2)](https://github.com/user-attachments/assets/7a26365b-62dc-4165-934a-5eadb4e21fa2)
 
-## 🔗 Endpoints Utilizados
 
-O frontend consome os seguintes endpoints do backend:
 
-### Categorias
-- `GET /api/categories` - Listar todas
-- `POST /api/categories` - Criar nova
-- `PUT /api/categories/{id}` - Atualizar
-- `DELETE /api/categories/{id}` - Deletar
+### 🗄️ Modelo Entidade-Relacionamento (ER)
+![e97aae50-7cdd-4bbe-b123-799c2bfa1f0e](https://github.com/user-attachments/assets/9fedb195-cda1-4e22-a855-0f16e60109e7)
 
-### Gastos (Expenses)
-- `GET /api/expenses` - Listar todos
-- `POST /api/expenses` - Criar novo
-- `GET /api/expenses/user/{userId}` - Por usuário
-- `GET /api/expenses/category/{categoryId}` - Por categoria
-- `PUT /api/expenses/{id}` - Atualizar
-- `DELETE /api/expenses/{id}` - Deletar
+
+
 
 ---
 
-## 🐛 Troubleshooting
+## 📖 Documentação
 
-### ❌ Erro: "Network request failed"
-**Solução:**
-1. Verifique se o backend está rodando (`http://localhost:8083`)
-2. Confira o IP no arquivo `api.ts`
-3. Certifique-se de estar na mesma rede Wi-Fi
+### 📚 Swagger/OpenAPI
 
-### ❌ Erro: "Cannot connect to backend"
-**Solução:**
-1. Teste o backend no navegador: `http://localhost:8083/api/categories`
-2. Verifique se o MySQL está ativo
-3. Confira as configurações do `application.properties`
-
-### ❌ Expo não abre
-**Solução:**
-```bash
-# Limpar cache
-npm start -- --clear
-
-# Reinstalar dependências
-rm -rf node_modules
-npm install
+Acesse a documentação interativa da API em:
+```
+http://localhost:8083/swagger-ui.html
 ```
 
-### ❌ Categorias não aparecem
-**Solução:**
-1. Crie categorias primeiro na tela "Categorias"
-2. Verifique se o backend retorna dados em `http://localhost:8083/api/categories`
 
 ---
 
-## 📝 Notas Técnicas
+## 🎯 Público-Alvo
 
-### IPs por Tipo de Dispositivo
-
-| Dispositivo | IP do Backend |
-|-------------|---------------|
-| Emulador Android | `10.0.2.2:8083` |
-| Emulador iOS | `localhost:8083` |
-| Dispositivo Físico | `192.168.X.X:8083` (IP da máquina) |
-
-### Formato dos Dados
-
-**Categoria:**
-```json
-{
-  "id": 1,
-  "name": "Alimentação",
-  "description": "Gastos com comida",
-  "createdAt": "2025-11-13T00:00:00"
-}
-```
-
-**Gasto:**
-```json
-{
-  "id": 1,
-  "description": "Almoço",
-  "amount": 35.50,
-  "date": "2025-11-13",
-  "categoryId": 1,
-  "userId": 1,
-  "categoryName": "Alimentação"
-}
-```
+- 💼 Pessoas que desejam ter maior controle sobre suas finanças pessoais
+- 📊 Usuários que buscam acompanhar seus gastos mensais
+- 💡 Indivíduos interessados em tomar decisões financeiras mais conscientes
 
 ---
-
-## 🔧 Comandos Úteis
-
-```bash
-# Iniciar projeto
-npm start
-
-# Limpar cache
-npm start -- --clear
-
-# Rodar no Android
-npm run android
-
-# Rodar no iOS (apenas Mac)
-npm run ios
-
-# Verificar compatibilidade
-npx expo-doctor
-
-# Atualizar Expo
-npm install expo@latest
-```
-
----
-
-## 👨‍💻 Desenvolvimento
-
-Projeto desenvolvido com:
-- **React Native** 0.72
-- **Expo** 49
-- **TypeScript** 5.1
-- **React Navigation** 6.x
-- **Axios** para requisições HTTP
-
----
-
-## ✅ Checklist Antes de Testar
-
-- [ ] Backend rodando na porta 8083
-- [ ] MySQL ativo e com banco criado
-- [ ] Dependências instaladas (`npm install`)
-- [ ] IP correto no `api.ts` (se dispositivo físico)
-- [ ] Celular na mesma rede Wi-Fi (se dispositivo físico)
-- [ ] Pelo menos 1 categoria criada
-
----
-
-**Pronto para usar!** 🚀
-
-Execute `npm start` e bom teste!
