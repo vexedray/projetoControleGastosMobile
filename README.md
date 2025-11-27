@@ -57,8 +57,8 @@ Desenvolver uma solução completa que auxilie pessoas a terem maior controle so
 ## 📋 Pré-requisitos
 
 ### Backend
-- Java 17 ou superior
-- Maven 3.6+
+- Java 23
+- Maven 3.9+
 - MySQL Server 8.0+
 
 ### Frontend
