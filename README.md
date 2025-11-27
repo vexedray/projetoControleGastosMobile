@@ -135,23 +135,24 @@ npm install axios
    
 3. **Configure a URL da API**
 
-Edite o arquivo `src/services/api.ts`:
+Edite o arquivo `frontend/src/services/api.ts`:
 ```typescript
 const api = axios.create({
-  baseURL: 'http://localhost:8083/api', // ou seu IP local
+  baseURL: 'http://seu_ip_local/api', 
 });
 ```
 
 4. **Execute o projeto pelo emulador**
 ```bash
 npx expo start (para emulador)
+Clicar na letra "a" no terminal para abrir no emulador
 ```
 
 5. **Ou abra no seu dispositivo**
 ```bash
 npx expo start --tunnel 
+**Utilizando o SDK 49** Escaneie o QR Code com o app **Expo Go** (Android/iOS)
 ```
-- **Utilizando o SDK 49** Escaneie o QR Code com o app **Expo Go** (Android/iOS)
 
 
 ---
