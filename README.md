@@ -6,7 +6,7 @@ Sistema completo de controle de gastos pessoais com backend em **Spring Boot** e
 
 ---
 
-## 📋 Sobre o Projeto
+## Sobre o Projeto
 
 Aplicativo mobile desenvolvido para controle financeiro pessoal, permitindo aos usuários registrar, categorizar e visualizar seus gastos de forma simples e intuitiva.
 
@@ -25,27 +25,27 @@ Desenvolver uma solução completa que auxilie pessoas a terem maior controle so
 - ✅ **Gerenciamento de Usuários**: Sistema de cadastro e autenticação JWT
 - ✅ **Categorização**: Organização de gastos por categorias personalizáveis
 - ✅ **Exclusão de Despesas**: Remover registros indesejados
-- ✅ Gráficos de gastos por categoria
+- ✅ **Gráficos**: Gráfico detalhado por categoria
+- ✅ **Edição**: Editar as despesas e categorias existentes
+- ✅ **Personalização**: Personalizar as cores dos gráficos
   
 ### 🔮 Funcionalidades Futuras (Opcionais)
 
-- 🔄 Editar despesas existentes
-- 🎯 Definir metas de gastos
+- 🎯 Definir valor máximo de despesa referente ao salário
 - 🔔 Notificações e alertas
 - 📄 Exportar dados para PDF/Excel
-- 🎨 Categorias personalizadas
-- 📄 Filtros**: Busca por data, categoria e valor
+- 📄 Filtros: Busca por data, categoria e valor
 - 🌙 Modo escuro
 
 ---
 
-## 🚀 Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 ### Backend
-- **Java 17+**
-- **Spring Boot 3.1.0**
+- **Java 23**
+- **Spring Boot 3.3.5**
 - **Spring Data JPA**
-- **MySQL 8.0**
+- **MySQL 8.2.0**
 - **Maven 3.9.4**
 
 ### Frontend
@@ -90,18 +90,18 @@ mvn spring-boot:run
 ```
 -Instale o MySQL Server
 -Crie um usuário root sem senha ou configure no application.properties
--O banco sistema_gastos será criado automaticamente
+-O banco expense_control será criado automaticamente
 ```
 
 3. **Configure o arquivo `application.properties`**
 ```properties
 # Database Configuration
-spring.datasource.url=jdbc:mysql://localhost:3306/controle_gastos
+spring.datasource.url=jdbc:mysql://localhost:3306/expense_control
 spring.datasource.username=seu_usuario
 spring.datasource.password=sua_senha
 
 # JPA Configuration
-spring.jpa.hibernate.ddl-auto=update
+spring.jpa.hibernate.ddl-auto=none
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
 
@@ -122,8 +122,16 @@ cd ../frontend
 2. **Instale as dependências**
 ```bash
 
-npm axios 
+# Instale o Expo CLI globalmente
+npm install -g expo-cli
+
+# Instale as dependências do projeto
+npm install
+
+# Instale dependências peer e de gráficos e axios
 npm install --legacy-peer-deps
+npm install react-native-chart-kit react-native-svg
+npm install axios
    
 3. **Configure a URL da API**
 
@@ -134,14 +142,17 @@ const api = axios.create({
 });
 ```
 
-4. **Execute o projeto**
+4. **Execute o projeto pelo emulador**
 ```bash
-npx expo start
+npx expo start (para emulador)
 ```
 
-5. **Abra no seu dispositivo**
-- Escaneie o QR Code com o app **Expo Go** (Android/iOS)
-- Ou pressione `a` para Android, `i` para iOS
+5. **Ou abra no seu dispositivo**
+```bash
+npx expo start --tunnel 
+```
+- **Utilizando o SDK 49** Escaneie o QR Code com o app **Expo Go** (Android/iOS)
+
 
 ---
 
@@ -209,7 +220,7 @@ frontend/
 
 
 ### 🗄️ Modelo Entidade-Relacionamento (ER)
-![e97aae50-7cdd-4bbe-b123-799c2bfa1f0e](https://github.com/user-attachments/assets/9fedb195-cda1-4e22-a855-0f16e60109e7)
+<img width="464" height="630" alt="db" src="https://github.com/user-attachments/assets/199eec93-6cb2-4606-9a30-1c6866049636" />
 
 
 
