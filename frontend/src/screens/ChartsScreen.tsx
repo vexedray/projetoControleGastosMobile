@@ -165,7 +165,7 @@ export default function ChartsScreen() {
     name: item.category,
     amount: item.total,
     color: item.color,
-    legendFontColor: '#7F7F7F',
+    legendFontColor: '#000000ff',
     legendFontSize: 12,
   }));
 
@@ -231,7 +231,7 @@ export default function ChartsScreen() {
                 backgroundGradientFrom: '#ffffff',
                 backgroundGradientTo: '#ffffff',
                 decimalPlaces: 2,
-                color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
+                color: (opacity = 1) => `rgba(29, 128, 55, ${opacity})`,
                 labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
                 style: {
                   borderRadius: 16,
@@ -304,14 +304,14 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: 14,
-    color: '#DBEAFE',
+    color: '#ffffffff',
     marginBottom: 8,
     fontWeight: '600',
   },
   totalValue: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#ffffffff',
   },
   chartContainer: {
     backgroundColor: '#FFFFFF',
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 16,
-    color: '#111827',
+    color: '#1d8037ff',
   },
   chart: {
     marginVertical: 8,

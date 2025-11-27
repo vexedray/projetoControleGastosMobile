@@ -251,7 +251,7 @@ export default function HomeScreen({ navigation }: any) {
                     onPress={() => navigation?.navigate('Categories')}
                     style={styles.addCategoryButton}
                   >
-                    <Feather name="plus" size={16} color="#33cc5c" />
+                    <Feather name="plus" size={16} color="#2cb350ff" />
                     <Text style={styles.addCategoryText}>Nova Categoria</Text>
                   </TouchableOpacity>
                 </View>
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
-    color: '#111827',
+    color: '#1d8037ff',
   },
   inputGroup: {
     marginBottom: 16,
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   },
   addCategoryText: {
     fontSize: 14,
-    color: '#33cc5c',
+    color: '#2cb350ff',
     fontWeight: '600',
   },
   inputContainer: {

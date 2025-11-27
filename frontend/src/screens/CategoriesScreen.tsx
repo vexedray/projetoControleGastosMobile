@@ -4,13 +4,16 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  FlatList,
   StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  FlatList,
   Alert,
   ActivityIndicator,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Category {
   id: number;
@@ -27,10 +30,7 @@ const extractHateoasData = <T,>(response: any): T[] => {
   if (response._embedded) {
     const firstKey = Object.keys(response._embedded)[0];
     if (firstKey && Array.isArray(response._embedded[firstKey])) {
-      return response._embedded[firstKey].map((item: any) => {
-        const { _links, ...data } = item;
-        return data;
-      });
+      return response._embedded[firstKey];
     }
   }
   if (response.content && Array.isArray(response.content)) return response.content;
@@ -44,82 +44,78 @@ const extractHateoasItem = <T,>(response: any): T => {
 };
 
 export default function CategoriesScreen() {
+  const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedColor, setSelectedColor] = useState('#22C55E');
-  const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  const availableColors = [
+  const colorPalette = [
     '#22C55E', // Verde
-    '#33cc5c', // Verde claro
+    '#3B82F6', // Azul
     '#F59E0B', // Amarelo
     '#EF4444', // Vermelho
     '#8B5CF6', // Roxo
     '#EC4899', // Rosa
-    '#14B8A6', // Turquesa
+    '#14B8A6', // Teal
     '#F97316', // Laranja
   ];
 
   useEffect(() => {
-    fetchCategories();
+    loadCategories();
   }, []);
 
-  const fetchCategories = async () => {
+  const loadCategories = async () => {
     try {
+      setLoading(true);
       const response = await api.get('/categories');
+      console.log('Response categorias:', response.data);
       const categoriesData = extractHateoasData<Category>(response.data);
+      console.log('Categorias extraídas:', categoriesData);
       setCategories(categoriesData);
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
       Alert.alert('Erro', 'Não foi possível carregar as categorias');
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!name.trim()) {
-      Alert.alert('Atenção', 'O nome da categoria é obrigatório');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      if (editingId) {
-        const response = await api.put(`/categories/${editingId}`, {
-          name: name.trim(),
-          description: description.trim() || undefined,
-          color: selectedColor,
-        });
-        const updatedCategory = extractHateoasItem<Category>(response.data);
-        console.log('Categoria atualizada:', updatedCategory);
-        Alert.alert('Sucesso', 'Categoria atualizada!');
-        setEditingId(null);
-      } else {
-        const response = await api.post('/categories', {
-          name: name.trim(),
-          description: description.trim() || undefined,
-          color: selectedColor,
-        });
-        const newCategory = extractHateoasItem<Category>(response.data);
-        console.log('Categoria criada:', newCategory);
-        Alert.alert('Sucesso', 'Categoria criada!');
-      }
-      
-      setName('');
-      setDescription('');
-      setSelectedColor('#22C55E');
-      fetchCategories();
-    } catch (error) {
-      console.error('Erro ao salvar categoria:', error);
-      Alert.alert('Erro', 'Não foi possível salvar a categoria');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSubmit = async () => {
+    if (!name.trim()) {
+      Alert.alert('Atenção', 'Digite o nome da categoria');
+      return;
+    }
+
+    try {
+      const categoryData = {
+        name: name.trim(),
+        description: description.trim() || undefined,
+        color: selectedColor,
+      };
+
+      if (editingId) {
+        await api.put(`/categories/${editingId}`, categoryData);
+        Alert.alert('Sucesso', 'Categoria atualizada com sucesso!');
+      } else {
+        await api.post('/categories', categoryData);
+        Alert.alert('Sucesso', 'Categoria criada com sucesso!');
+      }
+
+      setName('');
+      setDescription('');
+      setSelectedColor('#22C55E');
+      setEditingId(null);
+      loadCategories();
+    } catch (error) {
+      console.error('Erro ao salvar categoria:', error);
+      Alert.alert('Erro', 'Não foi possível salvar a categoria');
+    }
+  };
+
   const handleEdit = (category: Category) => {
-    console.log('Editando categoria:', category);
     setName(category.name);
     setDescription(category.description || '');
     setSelectedColor(category.color || '#22C55E');
@@ -134,7 +130,6 @@ export default function CategoriesScreen() {
   };
 
   const handleDelete = (id: number) => {
-    console.log('Tentando excluir categoria:', id);
     Alert.alert(
       'Confirmar exclusão',
       'Deseja realmente excluir esta categoria?',
@@ -148,10 +143,9 @@ export default function CategoriesScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              console.log('Excluindo categoria ID:', id);
               await api.delete(`/categories/${id}`);
-              Alert.alert('Sucesso', 'Categoria excluída!');
-              fetchCategories();
+              Alert.alert('Sucesso', 'Categoria excluída com sucesso!');
+              loadCategories();
             } catch (error) {
               console.error('Erro ao excluir categoria:', error);
               Alert.alert('Erro', 'Não foi possível excluir a categoria');
@@ -176,20 +170,14 @@ export default function CategoriesScreen() {
       <View style={styles.categoryActions}>
         <TouchableOpacity
           style={styles.actionButton}
-          onPress={() => {
-            console.log('Botão editar pressionado para:', item.name);
-            handleEdit(item);
-          }}
+          onPress={() => handleEdit(item)}
           activeOpacity={0.7}
         >
           <Feather name="edit-2" size={20} color="#6B7280" />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionButton}
-          onPress={() => {
-            console.log('Botão deletar pressionado para:', item.name);
-            handleDelete(item.id);
-          }}
+          onPress={() => handleDelete(item.id)}
           activeOpacity={0.7}
         >
           <Feather name="trash-2" size={20} color="#EF4444" />
@@ -198,87 +186,93 @@ export default function CategoriesScreen() {
     </View>
   );
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Gerenciar Categorias</Text>
-        <Text style={styles.subtitle}>Crie e organize suas categorias de gastos</Text>
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#1d8037" />
       </View>
+    );
+  }
 
-      <View style={styles.form}>
-        {editingId && (
-          <View style={styles.editingBanner}>
-            <Text style={styles.editingText}>Editando categoria</Text>
-            <TouchableOpacity onPress={handleCancelEdit}>
-              <Feather name="x" size={20} color="#EF4444" />
-            </TouchableOpacity>
-          </View>
-        )}
-        <TextInput
-          style={styles.input}
-          placeholder="Nome da categoria"
-          placeholderTextColor="#9CA3AF"
-          value={name}
-          onChangeText={setName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Descrição (opcional)"
-          placeholderTextColor="#9CA3AF"
-          value={description}
-          onChangeText={setDescription}
-          multiline
-        />
-        
-        <Text style={styles.colorLabel}>Escolha uma cor:</Text>
-        <View style={styles.colorPicker} key={`color-picker-${editingId || 'new'}-${selectedColor}`}>
-          {availableColors.map((color) => (
-            <TouchableOpacity
-              key={color}
-              style={[
-                styles.colorOption,
-                { backgroundColor: color },
-                selectedColor === color && styles.colorOptionSelected,
-              ]}
-              onPress={() => {
-                console.log('Cor selecionada:', color);
-                setSelectedColor(color);
-              }}
-              activeOpacity={0.7}
-            />
-          ))}
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+        <View style={styles.header}>
+          <Text style={styles.title}>Gerenciar Categorias</Text>
+          <Text style={styles.subtitle}>Crie e organize suas categorias de gastos</Text>
         </View>
 
-        <TouchableOpacity
-          style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-          onPress={handleSubmit}
-          disabled={loading}
-          activeOpacity={0.8}
-        >
-          {loading ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
+        <View style={styles.form}>
+          {editingId && (
+            <View style={styles.editingBanner}>
+              <Text style={styles.editingText}>Editando categoria</Text>
+              <TouchableOpacity onPress={handleCancelEdit}>
+                <Feather name="x" size={20} color="#92400E" />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <TextInput
+            style={styles.input}
+            placeholder="Nome da categoria"
+            value={name}
+            onChangeText={setName}
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Descrição (opcional)"
+            value={description}
+            onChangeText={setDescription}
+            multiline
+          />
+
+          <Text style={styles.colorLabel}>Escolha uma cor:</Text>
+          <View style={styles.colorPicker}>
+            {colorPalette.map((color) => (
+              <TouchableOpacity
+                key={color}
+                style={[
+                  styles.colorOption,
+                  { backgroundColor: color },
+                  selectedColor === color && styles.colorOptionSelected,
+                ]}
+                onPress={() => setSelectedColor(color)}
+              />
+            ))}
+          </View>
+
+          <TouchableOpacity
+            style={[styles.submitButton, !name.trim() && styles.submitButtonDisabled]}
+            onPress={handleSubmit}
+            disabled={!name.trim()}
+          >
             <Text style={styles.submitButtonText}>
               {editingId ? 'Atualizar Categoria' : 'Criar Categoria'}
             </Text>
-          )}
-        </TouchableOpacity>
-      </View>
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.listHeader}>
-        <Text style={styles.listTitle}>
-          Categorias Existentes ({categories.length})
-        </Text>
-      </View>
+        <View style={styles.listHeader}>
+          <Text style={styles.listTitle}>Minhas Categorias ({categories.length})</Text>
+        </View>
 
-      <FlatList
-        data={categories}
-        renderItem={renderCategoryItem}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
-    </View>
+        {categories.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Feather name="inbox" size={48} color="#9CA3AF" />
+            <Text style={styles.emptyText}>Nenhuma categoria cadastrada</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={categories}
+            renderItem={renderCategoryItem}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.listContent}
+            scrollEnabled={false}
+          />
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -299,7 +293,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#111827',
+    color: '#1d8037ff',
     marginBottom: 4,
     textAlign: 'center',
   },
@@ -440,5 +434,15 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     padding: 8,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#9CA3AF',
+    marginTop: 12,
   },
 });

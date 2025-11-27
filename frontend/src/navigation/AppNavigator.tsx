@@ -16,7 +16,8 @@ const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 function MainTabNavigator() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const userName = user?.name?.split(' ')[0] || 'Usuário';
 
   return (
     <Tab.Navigator
@@ -28,11 +29,13 @@ function MainTabNavigator() {
             iconName = 'home';
           } else if (route.name === 'Categories') {
             iconName = 'tag';
+            } else if (route.name === 'Gráficos') {
+              iconName = 'bar-chart-2';
           }
 
           return <Feather name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#33cc5c',
+        tabBarActiveTintColor: '#1d8037',
         tabBarInactiveTintColor: '#9CA3AF',
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
@@ -52,6 +55,7 @@ function MainTabNavigator() {
         headerTitleStyle: {
           fontWeight: 'bold',
           fontSize: 18,
+          color: '#2cb350ff',
         },
         headerRight: () => (
           <TouchableOpacity
@@ -67,17 +71,26 @@ function MainTabNavigator() {
       <Tab.Screen 
         name="Início" 
         component={HomeScreen}
-        options={{ title: 'Controle de Gastos' }}
+        options={{ 
+          title: `Olá, ${userName}`,
+          tabBarLabel: 'Início'
+        }}
       />
       <Tab.Screen 
         name="Categories" 
         component={CategoriesScreen}
-        options={{ title: 'Categorias' }}
+        options={{ 
+          title: `Olá, ${userName}`,
+          tabBarLabel: 'Categorias'
+        }}
       />
       <Tab.Screen 
         name="Gráficos" 
         component={ChartsScreen}
-        options={{ title: 'Análise de Gastos' }}
+        options={{ 
+          title: `Olá, ${userName}`,
+          tabBarLabel: 'Gráficos'
+        }}
       />
     </Tab.Navigator>
     
