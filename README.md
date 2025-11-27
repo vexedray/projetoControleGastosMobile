@@ -151,7 +151,7 @@ Clicar na letra "a" no terminal para abrir no emulador
 5. **Ou abra no seu dispositivo**
 ```bash
 npx expo start --tunnel 
-**Utilizando o SDK 49** Escaneie o QR Code com o app **Expo Go** (Android/iOS)
+Utilizando o SDK 49 escaneie o QR Code com o app **Expo Go** (Android/iOS)
 ```
 
 
