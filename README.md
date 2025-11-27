@@ -190,20 +190,39 @@ backend/
 └── HATEOAS_DOCUMENTATION.md                            # Documentação HATEOAS
 ```
 
+### 🧪 Estrutura de Testes
+
+```
+backend/
+├── src/
+│   ├── test/
+│   │   └── java/
+│   │       └── com/
+│   │           └── expense/
+│   │               ├── controller/   # Testes dos controllers REST
+│   │               └── service/      # Testes das regras de negócio
+```
+
 ### Frontend (React Native)
 
 ```
 frontend/
+├── App.tsx
 ├── src/
 │   ├── components/          # Componentes reutilizáveis
 │   │   └── ExpenseList.tsx
+│   ├── contexts/            # Contextos globais (ex: autenticação)
+│   │   └── AuthContext.tsx
+│   ├── navigation/          # Navegação entre telas
+│   │   └── AppNavigator.tsx
 │   ├── screens/             # Telas do app
-│   │   ├── AddExpenseScreen.tsx
+│   │   ├── CategoriesScreen.tsx
+│   │   ├── ChartsScreen.tsx
 │   │   ├── HomeScreen.tsx
-│   │   └── LoginScreen.tsx
+│   │   ├── LoginScreen.tsx
+│   │   └── RegisterScreen.tsx
 │   ├── services/            # Serviços e API
-│   │   └── api.ts
-│   └── App.tsx
+│       └── api.ts
 
 ```
 
