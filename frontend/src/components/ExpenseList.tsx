@@ -13,12 +13,14 @@ import { expenseApi, Expense } from '../services/api';
 interface ExpenseListProps {
   expenses: Expense[];
   onExpenseDeleted: () => void;
+  categories?: { id: number; name: string }[];
 }
 
 const ExpenseList: React.FC<ExpenseListProps> = ({ 
-  expenses, 
-  onExpenseDeleted,
-}) => {
+    expenses,
+    onExpenseDeleted,
+    categories = [],
+  }) => {
   const handleDelete = async (id: number) => {
     try {
       await expenseApi.delete(id);
@@ -46,9 +48,20 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
     return date.toLocaleDateString('pt-BR');
   };
 
+  // Recebe lista de categorias do HomeScreen via prop
+
+  const getCategoryName = (item: Expense) => {
+    if ((item as any).categoryName) return (item as any).categoryName;
+    if (item.category?.name) return item.category.name;
+    if (item.categoryId && categories.length > 0) {
+      const found = categories.find((cat: any) => cat.id === item.categoryId);
+      if (found) return found.name;
+    }
+    return 'Sem categoria';
+  };
+
   const renderItem = ({ item }: { item: Expense }) => {
-    const categoryName = (item as any).categoryName || item.category?.name || 'Sem categoria';
-    
+    const categoryName = getCategoryName(item);
     return (
       <View style={styles.item}>
         <View style={styles.itemContent}>
@@ -98,7 +111,6 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
       contentContainerStyle={styles.listContent}
       showsVerticalScrollIndicator={false}
       ListEmptyComponent={renderEmptyComponent}
-      scrollEnabled={false}
     />
   );
 };

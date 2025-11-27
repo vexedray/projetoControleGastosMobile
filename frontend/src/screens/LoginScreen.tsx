@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   },
   registerLink: {
     fontSize: 14,
-    color: '#1d8037',
+    color: '#219740ff',
     fontWeight: '600',
   },
   testInfo: {

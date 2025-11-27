@@ -333,8 +333,9 @@ export default function HomeScreen({ navigation }: any) {
             Meus Gastos ({expenses.length})
           </Text>
           <ExpenseList 
-            expenses={expenses} 
+            expenses={expenses}
             onExpenseDeleted={fetchExpenses}
+            categories={categories}
           />
         </View>
       </ScrollView>

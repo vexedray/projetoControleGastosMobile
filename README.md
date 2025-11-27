@@ -110,7 +110,7 @@ jwt.secret=sua_chave_secreta_aqui
 jwt.expiration=86400000
 ```
 
-O backend estará rodando em `http://localhost:8080`
+O backend estará rodando em `http://localhost:8083`
 
 ### 📱 Configuração do Frontend
 
@@ -130,7 +130,7 @@ npm install --legacy-peer-deps
 Edite o arquivo `src/services/api.ts`:
 ```typescript
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api', // ou seu IP local
+  baseURL: 'http://localhost:8083/api', // ou seu IP local
 });
 ```
 
@@ -152,27 +152,30 @@ npx expo start
 ```
 backend/
 ├── src/
-│   └── main/
-│       ├── java/
-│       │   └── com/expense/
-│       │       ├── controller/      # Controllers REST
-│       │       │   ├── ExpenseController.java
-│       │       │   └── UserController.java
-│       │       ├── model/           # Entidades JPA
-│       │       │   ├── Expense.java
-│       │       │   └── User.java
-│       │       ├── repository/      # Repositórios JPA
-│       │       │   ├── ExpenseRepository.java
-│       │       │   └── UserRepository.java
-│       │       ├── service/         # Regras de negócio
-│       │       │   ├── ExpenseService.java
-│       │       │   └── UserService.java
-│       │       └── ExpenseApplication.java
-│       └── resources/
-│           ├── application.properties
-│           └── data.sql
-├── pom.xml
-└── README.md
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/
+│   │   │       └── expense/
+│   │   │           ├── ExpenseApplication.java         # Classe principal da aplicação
+│   │   │           ├── assembler/                      # Montadores de modelos HATEOAS
+│   │   │           ├── config/                         # Configurações (ex: CORS)
+│   │   │           ├── controller/                     # Controllers REST
+│   │   │           ├── dto/                            # Objetos de transferência de dados
+│   │   │           ├── mapper/                         # Mapeamento entre entidades e DTOs
+│   │   │           ├── model/                          # Entidades JPA
+│   │   │           ├── repository/                     # Repositórios JPA
+│   │   │           ├── security/                       # Segurança e autenticação JWT
+│   │   │           └── service/                        # Regras de negócio
+│   ├── resources/
+│   │   ├── application.properties                      # Configurações da aplicação
+│   │   └── db/
+│   │       └── migration/                              # Scripts de migração do banco
+│   │           ├── V1__create_user_table.sql
+│   │           ├── V2__create_categories_table.sql
+│   │           ├── V3__create_expense_table.sql
+│   │           └── V4__insert_test_data.sql
+├── pom.xml                                             # Gerenciador de dependências Maven
+└── HATEOAS_DOCUMENTATION.md                            # Documentação HATEOAS
 ```
 
 ### Frontend (React Native)
@@ -219,7 +222,7 @@ frontend/
 
 Acesse a documentação interativa da API em:
 ```
-http://localhost:8080/swagger-ui.html
+http://localhost:8083/swagger-ui.html
 ```
 
 

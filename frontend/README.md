@@ -182,17 +182,25 @@ backend/
 frontend/
 ├── src/
 │   ├── components/          # Componentes reutilizáveis
-│   │   ├── ExpenseForm.tsx
 │   │   └── ExpenseList.tsx
-│   ├── screens/             # Telas do app
-│   │   ├── AddExpenseScreen.tsx
+│   ├── contexts/            # Contextos globais (ex: autenticação)
+│   │   └── AuthContext.tsx
+│   ├── navigation/          # Navegação entre telas
+│   │   └── AppNavigator.tsx
+│   ├── screens/             # Telas do aplicativo
+│   │   ├── CategoriesScreen.tsx
+│   │   ├── ChartsScreen.tsx
 │   │   ├── HomeScreen.tsx
-│   │   └── LoginScreen.tsx
-│   ├── services/            # Serviços e API
+│   │   ├── LoginScreen.tsx
+│   │   └── RegisterScreen.tsx
+│   ├── services/            # Serviços e integração com API
 │   │   └── api.ts
-│   └── App.tsx
-├── package.json
-└── README.md
+│   └── utils/               # Funções utilitárias
+├── App.tsx                  # Componente principal do app
+├── package.json             # Dependências do projeto
+├── tsconfig.json            # Configuração TypeScript
+└── app.json                 # Configuração do Expo
+
 ```
 
 ---

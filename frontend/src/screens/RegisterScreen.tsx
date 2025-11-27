@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   },
   loginLink: {
     fontSize: 14,
-    color: '#33cc5c',
+    color: '#219740ff',
     fontWeight: '600',
   },
 });
