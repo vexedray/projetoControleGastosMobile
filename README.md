@@ -196,7 +196,6 @@ backend/
 frontend/
 ├── src/
 │   ├── components/          # Componentes reutilizáveis
-│   │   ├── ExpenseForm.tsx
 │   │   └── ExpenseList.tsx
 │   ├── screens/             # Telas do app
 │   │   ├── AddExpenseScreen.tsx
@@ -205,8 +204,7 @@ frontend/
 │   ├── services/            # Serviços e API
 │   │   └── api.ts
 │   └── App.tsx
-├── package.json
-└── README.md
+
 ```
 
 ---
