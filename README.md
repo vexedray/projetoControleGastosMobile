@@ -190,7 +190,7 @@ backend/
 └── HATEOAS_DOCUMENTATION.md                            # Documentação HATEOAS
 ```
 
-### 🧪 Estrutura de Testes
+### Estrutura de Testes
 
 ```
 backend/
