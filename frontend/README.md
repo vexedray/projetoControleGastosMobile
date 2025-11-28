@@ -6,7 +6,7 @@ Sistema completo de controle de gastos pessoais com backend em **Spring Boot** e
 
 ---
 
-## 📋 Sobre o Projeto
+## Sobre o Projeto
 
 Aplicativo mobile desenvolvido para controle financeiro pessoal, permitindo aos usuários registrar, categorizar e visualizar seus gastos de forma simples e intuitiva.
 
@@ -25,27 +25,27 @@ Desenvolver uma solução completa que auxilie pessoas a terem maior controle so
 - ✅ **Gerenciamento de Usuários**: Sistema de cadastro e autenticação JWT
 - ✅ **Categorização**: Organização de gastos por categorias personalizáveis
 - ✅ **Exclusão de Despesas**: Remover registros indesejados
-- ✅ Gráficos de gastos por categoria
+- ✅ **Gráficos**: Gráfico detalhado por categoria
+- ✅ **Edição**: Editar as despesas e categorias existentes
+- ✅ **Personalização**: Personalizar as cores dos gráficos
   
 ### 🔮 Funcionalidades Futuras (Opcionais)
 
-- 🔄 Editar despesas existentes
-- 🎯 Definir metas de gastos
+- 🎯 Definir valor máximo de despesa referente ao salário
 - 🔔 Notificações e alertas
 - 📄 Exportar dados para PDF/Excel
-- 🎨 Categorias personalizadas
-- 📄 Filtros**: Busca por data, categoria e valor
+- 📄 Filtros: Busca por data, categoria e valor
 - 🌙 Modo escuro
 
 ---
 
-## 🚀 Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 ### Backend
-- **Java 17+**
-- **Spring Boot 3.1.0**
+- **Java 23**
+- **Spring Boot 3.3.5**
 - **Spring Data JPA**
-- **MySQL 8.0**
+- **MySQL 8.2.0**
 - **Maven 3.9.4**
 
 ### Frontend
@@ -57,8 +57,8 @@ Desenvolver uma solução completa que auxilie pessoas a terem maior controle so
 ## 📋 Pré-requisitos
 
 ### Backend
-- Java 17 ou superior
-- Maven 3.6+
+- Java 23
+- Maven 3.9+
 - MySQL Server 8.0+
 
 ### Frontend
@@ -96,12 +96,12 @@ mvn spring-boot:run
 3. **Configure o arquivo `application.properties`**
 ```properties
 # Database Configuration
-spring.datasource.url=jdbc:mysql://localhost:3306/controle_gastos
+spring.datasource.url=jdbc:mysql://localhost:3306/expense_control
 spring.datasource.username=seu_usuario
 spring.datasource.password=sua_senha
 
 # JPA Configuration
-spring.jpa.hibernate.ddl-auto=update
+spring.jpa.hibernate.ddl-auto=none
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
 
@@ -122,27 +122,38 @@ cd ../frontend
 2. **Instale as dependências**
 ```bash
 
-npm axios 
+# Instale o Expo CLI globalmente
+npm install -g expo-cli
+
+# Instale as dependências do projeto
+npm install
+
+# Instale dependências peer e de gráficos e axios
 npm install --legacy-peer-deps
 npm install react-native-chart-kit react-native-svg
+npm install axios
    
 3. **Configure a URL da API**
 
-Edite o arquivo `src/services/api.ts`:
+Edite o arquivo `frontend/src/services/api.ts`:
 ```typescript
 const api = axios.create({
-  baseURL: 'http://localhost:8083/api', // ou seu IP local
+  baseURL: 'http://seu_ip_local/api', 
 });
 ```
 
-4. **Execute o projeto**
+4. **Execute o projeto pelo emulador**
 ```bash
-npx expo start
+npx expo start (para emulador)
+Clicar na letra "a" no terminal para abrir no emulador
 ```
 
-5. **Abra no seu dispositivo**
-- Escaneie o QR Code com o app **Expo Go** (Android/iOS)
-- Ou pressione `a` para Android, `i` para iOS
+5. **Ou abra no seu dispositivo**
+```bash
+npx expo start --tunnel 
+Utilizando o SDK 49 escaneie o QR Code com o app **Expo Go** (Android/iOS)
+```
+
 
 ---
 
@@ -153,33 +164,50 @@ npx expo start
 ```
 backend/
 ├── src/
-│   └── main/
-│       ├── java/
-│       │   └── com/expense/
-│       │       ├── controller/      # Controllers REST
-│       │       │   ├── ExpenseController.java
-│       │       │   └── UserController.java
-│       │       ├── model/           # Entidades JPA
-│       │       │   ├── Expense.java
-│       │       │   └── User.java
-│       │       ├── repository/      # Repositórios JPA
-│       │       │   ├── ExpenseRepository.java
-│       │       │   └── UserRepository.java
-│       │       ├── service/         # Regras de negócio
-│       │       │   ├── ExpenseService.java
-│       │       │   └── UserService.java
-│       │       └── ExpenseApplication.java
-│       └── resources/
-│           ├── application.properties
-│           └── data.sql
-├── pom.xml
-└── README.md
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/
+│   │   │       └── expense/
+│   │   │           ├── ExpenseApplication.java         # Classe principal da aplicação
+│   │   │           ├── assembler/                      # Montadores de modelos HATEOAS
+│   │   │           ├── config/                         # Configurações (ex: CORS)
+│   │   │           ├── controller/                     # Controllers REST
+│   │   │           ├── dto/                            # Objetos de transferência de dados
+│   │   │           ├── mapper/                         # Mapeamento entre entidades e DTOs
+│   │   │           ├── model/                          # Entidades JPA
+│   │   │           ├── repository/                     # Repositórios JPA
+│   │   │           ├── security/                       # Segurança e autenticação JWT
+│   │   │           └── service/                        # Regras de negócio
+│   ├── resources/
+│   │   ├── application.properties                      # Configurações da aplicação
+│   │   └── db/
+│   │       └── migration/                              # Scripts de migração do banco
+│   │           ├── V1__create_user_table.sql
+│   │           ├── V2__create_categories_table.sql
+│   │           ├── V3__create_expense_table.sql
+│   │           └── V4__insert_test_data.sql
+├── pom.xml                                             # Gerenciador de dependências Maven
+└── HATEOAS_DOCUMENTATION.md                            # Documentação HATEOAS
+```
+
+### Estrutura de Testes
+
+```
+backend/
+├── src/
+│   ├── test/
+│   │   └── java/
+│   │       └── com/
+│   │           └── expense/
+│   │               ├── controller/   # Testes dos controllers REST
+│   │               └── service/      # Testes das regras de negócio
 ```
 
 ### Frontend (React Native)
 
 ```
 frontend/
+├── App.tsx
 ├── src/
 │   ├── components/          # Componentes reutilizáveis
 │   │   └── ExpenseList.tsx
@@ -187,19 +215,14 @@ frontend/
 │   │   └── AuthContext.tsx
 │   ├── navigation/          # Navegação entre telas
 │   │   └── AppNavigator.tsx
-│   ├── screens/             # Telas do aplicativo
+│   ├── screens/             # Telas do app
 │   │   ├── CategoriesScreen.tsx
 │   │   ├── ChartsScreen.tsx
 │   │   ├── HomeScreen.tsx
 │   │   ├── LoginScreen.tsx
 │   │   └── RegisterScreen.tsx
-│   ├── services/            # Serviços e integração com API
-│   │   └── api.ts
-│   └── utils/               # Funções utilitárias
-├── App.tsx                  # Componente principal do app
-├── package.json             # Dependências do projeto
-├── tsconfig.json            # Configuração TypeScript
-└── app.json                 # Configuração do Expo
+│   ├── services/            # Serviços e API
+│       └── api.ts
 
 ```
 
@@ -215,7 +238,7 @@ frontend/
 
 
 ### 🗄️ Modelo Entidade-Relacionamento (ER)
-![e97aae50-7cdd-4bbe-b123-799c2bfa1f0e](https://github.com/user-attachments/assets/9fedb195-cda1-4e22-a855-0f16e60109e7)
+<img width="464" height="630" alt="db" src="https://github.com/user-attachments/assets/199eec93-6cb2-4606-9a30-1c6866049636" />
 
 
 
@@ -241,3 +264,4 @@ http://localhost:8083/swagger-ui.html
 - 💡 Indivíduos interessados em tomar decisões financeiras mais conscientes
 
 ---
+
