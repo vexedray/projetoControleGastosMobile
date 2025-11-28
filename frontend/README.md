@@ -1,4 +1,4 @@
-# 💰 Sistema de Controle de Gastos
+![2012fd8b-65c1-4f34-976d-7d1dd22275db](https://github.com/user-attachments/assets/42aa1285-32ab-41d5-8ff3-f744019ef483)# 💰 Sistema de Controle de Gastos
 
 ---
 
@@ -233,8 +233,7 @@ frontend/
 
 ### 📐 Diagrama de Classes (UML)
 
-![Diagrama sem nome (2)](https://github.com/user-attachments/assets/7a26365b-62dc-4165-934a-5eadb4e21fa2)
-
+![2012fd8b-65c1-4f34-976d-7d1dd22275db](https://github.com/user-attachments/assets/6ed42bbb-39cf-41aa-81b8-56a5be9b4b4e)
 
 
 ### 🗄️ Modelo Entidade-Relacionamento (ER)
