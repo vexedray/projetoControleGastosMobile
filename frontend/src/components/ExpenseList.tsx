@@ -10,37 +10,63 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { expenseApi, Expense } from '../services/api';
 
+interface Category {
+  id: number;
+  name: string;
+  description?: string;
+  color?: string;
+}
+
 interface ExpenseListProps {
   expenses: Expense[];
   onExpenseDeleted: () => void;
-  categories?: { id: number; name: string }[];
+  onExpenseEdit: (expense: Expense) => void;
+  categories: Category[];
 }
 
-const ExpenseList: React.FC<ExpenseListProps> = ({ 
-    expenses,
-    onExpenseDeleted,
-    categories = [],
-  }) => {
-  const handleDelete = async (id: number) => {
-    try {
-      await expenseApi.delete(id);
-      onExpenseDeleted();
-      Alert.alert('Sucesso', 'Gasto deletado com sucesso!');
-    } catch (error) {
-      console.error('Erro ao deletar gasto:', error);
-      Alert.alert('Erro', 'Não foi possível deletar o gasto');
-    }
-  };
-
-  const confirmDelete = (id: number, description: string) => {
+export default function ExpenseList({ 
+  expenses, 
+  onExpenseDeleted, 
+  onExpenseEdit,
+  categories 
+}: ExpenseListProps) {
+  
+  const handleDelete = (id: number) => {
     Alert.alert(
-      'Deletar Gasto',
-      `Tem certeza que deseja deletar "${description}"?`,
+      'Confirmar exclusão',
+      'Deseja realmente excluir este gasto?',
       [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Deletar', style: 'destructive', onPress: () => handleDelete(id) },
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await expenseApi.delete(id);
+              Alert.alert('Sucesso', 'Gasto excluído com sucesso!');
+              onExpenseDeleted();
+            } catch (error) {
+              console.error('Erro ao excluir gasto:', error);
+              Alert.alert('Erro', 'Não foi possível excluir o gasto');
+            }
+          },
+        },
       ]
     );
+  };
+
+  const getCategoryById = (categoryId: number) => {
+    return categories.find(cat => cat.id === categoryId);
+  };
+
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    });
   };
 
   const formatDate = (dateString: string) => {
@@ -48,146 +74,184 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
     return date.toLocaleDateString('pt-BR');
   };
 
-  // Recebe lista de categorias do HomeScreen via prop
-
-  const getCategoryName = (item: Expense) => {
-    if ((item as any).categoryName) return (item as any).categoryName;
-    if (item.category?.name) return item.category.name;
-    if (item.categoryId && categories.length > 0) {
-      const found = categories.find((cat: any) => cat.id === item.categoryId);
-      if (found) return found.name;
-    }
-    return 'Sem categoria';
-  };
-
-  const renderItem = ({ item }: { item: Expense }) => {
-    const categoryName = getCategoryName(item);
+  const renderExpenseItem = ({ item }: { item: Expense }) => {
+    const category = getCategoryById(item.categoryId || 0);
+    
     return (
-      <View style={styles.item}>
-        <View style={styles.itemContent}>
-          <Text style={styles.description} numberOfLines={1}>
-            {item.description}
-          </Text>
-          <View style={styles.categoryContainer}>
-            <Feather name="tag" size={12} color="#1d8037" />
-            <Text style={styles.category}>
-              {categoryName}
-            </Text>
+      <View style={styles.expenseCard}>
+        <View style={styles.expenseHeader}>
+          <View style={styles.expenseMainInfo}>
+            <View style={styles.categoryBadge}>
+              <View 
+                style={[
+                  styles.categoryDot, 
+                  { backgroundColor: category?.color || '#22C55E' }
+                ]} 
+              />
+              <Text style={styles.categoryText}>
+                {category?.name || 'Sem categoria'}
+              </Text>
+            </View>
+            <Text style={styles.expenseDescription}>{item.description}</Text>
           </View>
-          <Text style={styles.value}>R$ {item.amount.toFixed(2)}</Text>
-          <View style={styles.dateContainer}>
-            <Feather name="calendar" size={12} color="#6B7280" />
-            <Text style={styles.date}>
-              {new Date(item.date).toLocaleDateString('pt-BR')}
+          <View style={styles.expenseAmountContainer}>
+            <Text style={styles.expenseAmount}>
+              {formatCurrency(item.amount)}
+            </Text>
+            <Text style={styles.expenseDate}>
+              {formatDate(item.date)}
             </Text>
           </View>
         </View>
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => item.id && confirmDelete(item.id, item.description)}
-        >
-          <Feather name="trash-2" size={18} color="#FFFFFF" />
-        </TouchableOpacity>
+        
+        <View style={styles.expenseActions}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => onExpenseEdit(item)}
+            activeOpacity={0.7}
+          >
+            <Feather name="edit-2" size={18} color="#6B7280" />
+            <Text style={styles.actionButtonText}>Editar</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.actionButton, styles.deleteButton]}
+            onPress={() => item.id && handleDelete(item.id)}
+            activeOpacity={0.7}
+          >
+            <Feather name="trash-2" size={18} color="#EF4444" />
+            <Text style={[styles.actionButtonText, styles.deleteButtonText]}>
+              Excluir
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   };
 
-  const renderEmptyComponent = () => (
-    <View style={styles.emptyContainer}>
-      <Feather name="inbox" size={48} color="#D1D5DB" />
-      <Text style={styles.emptyText}>Nenhum gasto registrado ainda</Text>
-      <Text style={styles.emptySubtext}>
-        Use o formulário acima para adicionar seu primeiro gasto
-      </Text>
-    </View>
-  );
+  if (expenses.length === 0) {
+    return (
+      <View style={styles.emptyState}>
+        <Feather name="inbox" size={48} color="#9CA3AF" />
+        <Text style={styles.emptyText}>Nenhum gasto cadastrado</Text>
+        <Text style={styles.emptySubtext}>
+          Adicione seu primeiro gasto usando o formulário acima
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <FlatList
       data={expenses}
-      keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
-      renderItem={renderItem}
-      style={styles.list}
+      renderItem={renderExpenseItem}
+      keyExtractor={(item) => (item.id || 0).toString()}
       contentContainerStyle={styles.listContent}
-      showsVerticalScrollIndicator={false}
-      ListEmptyComponent={renderEmptyComponent}
+      scrollEnabled={false}
     />
   );
-};
+}
 
 const styles = StyleSheet.create({
-  list: {
-    flex: 1,
-  },
   listContent: {
-    paddingBottom: 10,
+    paddingBottom: 20,
   },
-  item: {
+  expenseCard: {
     backgroundColor: '#F9FAFB',
+    borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    borderRadius: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
-  itemContent: {
-    flex: 1,
-    marginRight: 12,
+  expenseHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
-  description: {
+  expenseMainInfo: {
+    flex: 1,
+    marginRight: 16,
+  },
+  categoryBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  categoryDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 8,
+  },
+  categoryText: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  expenseDescription: {
     fontSize: 16,
     fontWeight: '600',
     color: '#111827',
-    marginBottom: 6,
+    marginBottom: 4,
   },
-  categoryContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-    gap: 4,
+  expenseAmountContainer: {
+    alignItems: 'flex-end',
   },
-  category: {
-    fontSize: 13,
-    color: '#1d8037',
-    fontWeight: '500',
-  },
-  value: {
+  expenseAmount: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#EF4444',
-    marginBottom: 6,
+    marginBottom: 4,
   },
-  dateContainer: {
+  expenseDate: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  expenseActions: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  actionButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    gap: 6,
   },
-  date: {
-    fontSize: 13,
+  actionButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
     color: '#6B7280',
   },
   deleteButton: {
-    backgroundColor: '#EF4444',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: '#FEE2E2',
+    backgroundColor: '#FEF2F2',
   },
-  emptyContainer: {
+  deleteButtonText: {
+    color: '#EF4444',
+  },
+  emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 50,
+    paddingVertical: 60,
     paddingHorizontal: 20,
   },
   emptyText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#6B7280',
-    textAlign: 'center',
     marginTop: 16,
     marginBottom: 8,
   },
@@ -197,5 +261,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
-export default ExpenseList;

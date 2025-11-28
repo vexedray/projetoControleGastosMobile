@@ -84,6 +84,7 @@ export default function HomeScreen({ navigation }: any) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   // Recarrega dados sempre que a tela receber foco
   useFocusEffect(
@@ -174,27 +175,54 @@ export default function HomeScreen({ navigation }: any) {
         date: formatDate(date),
       };
 
-    const response = await api.post('/expenses', expenseData);
-    const createdExpense = extractHateoasItem(response.data);
-    console.log('Expense criado:', createdExpense);
-    
-    Alert.alert('Sucesso', 'Gasto cadastrado com sucesso!');      // Limpar formulário
+      if (editingId) {
+        // Atualizar gasto existente
+        const response = await api.put(`/expenses/${editingId}`, expenseData);
+        const updatedExpense = extractHateoasItem(response.data);
+        console.log('Expense atualizado:', updatedExpense);
+        Alert.alert('Sucesso', 'Gasto atualizado com sucesso!');
+      } else {
+        // Criar novo gasto
+        const response = await api.post('/expenses', expenseData);
+        const createdExpense = extractHateoasItem(response.data);
+        console.log('Expense criado:', createdExpense);
+        Alert.alert('Sucesso', 'Gasto cadastrado com sucesso!');
+      }
+
+      // Limpar formulário
       setAmount('');
       setDescription('');
       setDate(new Date());
       setCategoryId(categories.length > 0 ? categories[0].id : null);
+      setEditingId(null);
       
       // Atualizar lista
       await fetchExpenses();
     } catch (error: any) {
-      console.error('Erro ao criar gasto:', error);
+      console.error('Erro ao salvar gasto:', error);
       const errorMessage = error.response?.data?.message || 
                           error.response?.data?.error || 
-                          'Não foi possível cadastrar o gasto';
+                          'Não foi possível salvar o gasto';
       Alert.alert('Erro', errorMessage);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEdit = (expense: Expense) => {
+    setAmount(expense.amount.toString());
+    setDescription(expense.description);
+    setCategoryId(expense.categoryId || null);
+    setDate(new Date(expense.date));
+    setEditingId(expense.id || null);
+  };
+
+  const handleCancelEdit = () => {
+    setAmount('');
+    setDescription('');
+    setDate(new Date());
+    setCategoryId(categories.length > 0 ? categories[0].id : null);
+    setEditingId(null);
   };
 
   return (
@@ -209,12 +237,23 @@ export default function HomeScreen({ navigation }: any) {
       >
         {/* Formulário de Adicionar Gasto */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Adicionar Novo Gasto</Text>
+          <Text style={styles.sectionTitle}>
+            {editingId ? 'Editar Gasto' : 'Adicionar Novo Gasto'}
+          </Text>
           
           {loadingCategories ? (
             <ActivityIndicator size="large" color="#33cc5c" />
           ) : (
             <>
+              {editingId && (
+                <View style={styles.editingBanner}>
+                  <Text style={styles.editingText}>Editando gasto</Text>
+                  <TouchableOpacity onPress={handleCancelEdit}>
+                    <Feather name="x" size={20} color="#92400E" />
+                  </TouchableOpacity>
+                </View>
+              )}
+
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Valor (R$) *</Text>
                 <View style={styles.inputContainer}>
@@ -306,7 +345,9 @@ export default function HomeScreen({ navigation }: any) {
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <>
-                    <Text style={styles.submitButtonText}>Cadastrar Gasto</Text>
+                    <Text style={styles.submitButtonText}>
+                      {editingId ? 'Atualizar Gasto' : 'Cadastrar Gasto'}
+                    </Text>
                     <Feather name="check" size={20} color="#FFFFFF" />
                   </>
                 )}
@@ -335,6 +376,7 @@ export default function HomeScreen({ navigation }: any) {
           <ExpenseList 
             expenses={expenses}
             onExpenseDeleted={fetchExpenses}
+            onExpenseEdit={handleEdit}
             categories={categories}
           />
         </View>
@@ -492,5 +534,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     flex: 1,
+  },
+  editingBanner: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  editingText: {
+    color: '#92400E',
+    fontWeight: '600',
   },
 });
