@@ -1,5 +1,6 @@
 💰 Sistema de Controle de Gastos - Spendly
 
+Link da apresentação: https://www.canva.com/design/DAG6CLiDk34/LX-ujqwvXpMIy2K67DQPMA/edit
 
 ---
 
