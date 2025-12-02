@@ -204,6 +204,9 @@ backend/
 │   │               └── service/      # Testes das regras de negócio
 ```
 
+<img width="746" height="422" alt="image" src="https://github.com/user-attachments/assets/3f81a009-398d-47c4-a6cc-c88782f5e6c8" />
+
+
 ### Frontend (React Native)
 
 ```
