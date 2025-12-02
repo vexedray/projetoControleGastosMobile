@@ -1,4 +1,4 @@
-![2012fd8b-65c1-4f34-976d-7d1dd22275db](https://github.com/user-attachments/assets/42aa1285-32ab-41d5-8ff3-f744019ef483)# 💰 Sistema de Controle de Gastos
+💰 Sistema de Controle de Gastos - Spendly
 
 ---
 
