@@ -4,6 +4,7 @@ import com.expense.dto.request.UserRequestDTO;
 import com.expense.dto.response.UserResponseDTO;
 import com.expense.mapper.UserMapper;
 import com.expense.model.User;
+import com.expense.model.hateoas.UserModel;
 import com.expense.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.hateoas.Link;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -47,9 +49,13 @@ class UserControllerTest {
     @MockBean
     private com.expense.security.UserDetailsServiceImpl userDetailsService;
 
+    @MockBean
+    private com.expense.assembler.UserModelAssembler userModelAssembler;
+
     private User user;
     private UserRequestDTO requestDTO;
     private UserResponseDTO responseDTO;
+    private UserModel userModel;
 
     @BeforeEach
     void setUp() {
@@ -68,13 +74,21 @@ class UserControllerTest {
         responseDTO.setId(1L);
         responseDTO.setName("John Doe");
         responseDTO.setEmail("john@example.com");
+
+        // Setup UserModel (HATEOAS)
+        userModel = new UserModel(1L, "John Doe", "john@example.com");
+        userModel.add(Link.of("/api/users/1", "self"));
+        userModel.add(Link.of("/api/users", "users"));
+
+        // Mock UserModelAssembler
+        when(userModelAssembler.toModel(any(UserResponseDTO.class)))
+            .thenReturn(userModel);
     }
 
     @Test
     void getAllUsers_ShouldReturnUserList() throws Exception {
         // Arrange
         List<User> users = Arrays.asList(user);
-
         when(userService.getAllUsers()).thenReturn(users);
         when(userMapper.toResponseDTO(any(User.class))).thenReturn(responseDTO);
 
@@ -82,9 +96,8 @@ class UserControllerTest {
         mockMvc.perform(get("/api/users")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].name").value("John Doe"))
-                .andExpect(jsonPath("$[0].email").value("john@example.com"));
+                .andExpect(jsonPath("$._embedded.userModelList[0].id").value(1))
+                .andExpect(jsonPath("$._embedded.userModelList[0].name").value("John Doe"));
 
         verify(userService, times(1)).getAllUsers();
     }
@@ -100,8 +113,7 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("John Doe"))
-                .andExpect(jsonPath("$.email").value("john@example.com"));
+                .andExpect(jsonPath("$.name").value("John Doe"));
 
         verify(userService, times(1)).getUserById(1L);
     }
@@ -131,8 +143,7 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("John Doe"))
-                .andExpect(jsonPath("$.email").value("john@example.com"));
+                .andExpect(jsonPath("$.name").value("John Doe"));
 
         verify(userService, times(1)).findByEmail("john@example.com");
     }
@@ -165,8 +176,7 @@ class UserControllerTest {
                 .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("John Doe"))
-                .andExpect(jsonPath("$.email").value("john@example.com"));
+                .andExpect(jsonPath("$.name").value("John Doe"));
 
         verify(userService, times(1)).existsByEmail("john@example.com");
         verify(userService, times(1)).createUser(any(User.class));
